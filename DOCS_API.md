@@ -5,8 +5,8 @@
 Esta API gestiona autenticación, usuarios y tickets de soporte para la plataforma Cyclix. Usa Spring Boot, MariaDB y JWT para la autenticación.
 
 - Repositorio: [Ccariasv/cyclix.api](https://github.com/Ccariasv/cyclix.api)
-- OpenAPI UI: [http://localhost:6060/swagger-ui/index.html](http://localhost:6060/swagger-ui/index.html)
-
+- OpenAPI UI: [https://api.cyclix.site/swagger-ui/index.html](https://api.cyclix.site/swagger-ui/index.html)
+- Base_URL https://api.cyclix.site/
 ---
 
 ## Autenticación y Seguridad
