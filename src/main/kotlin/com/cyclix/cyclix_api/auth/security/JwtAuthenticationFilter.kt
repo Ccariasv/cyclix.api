@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
-class JwtAuthenticationFilter(
+class   JwtAuthenticationFilter(
     private val jwtService: JwtService
 ) : OncePerRequestFilter() {
 
