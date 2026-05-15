@@ -1,14 +1,12 @@
 # Cyclix API
 
-Backend REST para autenticación, usuarios, soporte y viajes de la plataforma Cyclix.
-
-Está construido con Kotlin + Spring Boot, usa JWT para autenticación, JPA/Flyway para persistencia y MariaDB como base de datos.
+Backend REST de Cyclix para autenticación, usuarios, soporte, viajes, puestos y bicicletas.
 
 ## Stack
 
-- Kotlin `2.2.21`
-- Spring Boot `4.0.5`
-- Spring Security (JWT stateless)
+- Kotlin `2.1.20`
+- Spring Boot `3.4.5`
+- Spring Security + JWT (stateless)
 - Spring Data JPA
 - Flyway
 - MariaDB
@@ -17,77 +15,93 @@ Está construido con Kotlin + Spring Boot, usa JWT para autenticación, JPA/Flyw
 
 ## Requisitos
 
-- JDK `25` (toolchain del proyecto)
+- JDK `21`
 - Docker + Docker Compose (opcional, recomendado)
 
-Notas de versión Java en este repo:
-- El proyecto se ejecuta con JDK 25.
-- El bytecode/target está en `24` (`jvmTarget` y `options.release`).
-
-## Configuración principal
+## Configuración
 
 Archivo: `src/main/resources/application.properties`
 
-Variables relevantes:
-- `SERVER_PORT` (default `6060`)
-- `SPRING_DATASOURCE_URL` (default `jdbc:mariadb://localhost:3306/DB_cyclix`)
-- `SPRING_DATASOURCE_USERNAME` (default `cyclix_admin`)
-- `SPRING_DATASOURCE_PASSWORD` (default `cyclix10`)
-- `app.jwt.secret` (default local en repo, cambiar en ambientes reales)
+Variables principales:
+
+- `server.port` (default `6060`)
+- `SPRING_DATASOURCE_URL` (ejemplo compose: `jdbc:mariadb://mariadb:3306/DB_cyclix`)
+- `SPRING_DATASOURCE_USERNAME` (default compose: `cyclix_admin`)
+- `SPRING_DATASOURCE_PASSWORD` (default compose: `cyclix10`)
+- `app.jwt.secret`
 - `app.jwt.expiration-seconds` (default `86400`)
 
-## Ejecutar local (sin Docker para la API)
+## Ejecutar proyecto
 
-1. Levantar MariaDB (local o contenedor) con credenciales compatibles.
-2. Ejecutar la API:
+### Local
+
+1. Levantar MariaDB local.
+2. Ejecutar:
 
 ```bash
 ./gradlew bootRun
 ```
 
-La API quedará en `http://localhost:6060`.
+API disponible en `http://localhost:6060`.
 
-## Ejecutar con Docker Compose
-
-Este proyecto tiene dos servicios en `docker-compose.yaml`:
-- `mariadb`
-- `api` (con profile `full`)
-
-Comando recomendado:
+### Docker Compose
 
 ```bash
 docker compose --profile full up --build
 ```
 
-Notas importantes:
-- Si ejecutás `docker compose up` sin profile, no se crea el contenedor `api`.
-- La API expone `6060:6060`.
-- MariaDB expone `3306:3306`.
+Servicios:
+- `mariadb` (puerto `3306`)
+- `api` (puerto `6060`, profile `full`)
 
-## Swagger / OpenAPI
+## OpenAPI / Swagger
 
 - UI: `http://localhost:6060/swagger-ui/index.html`
-- JSON OpenAPI: `http://localhost:6060/v3/api-docs`
+- JSON: `http://localhost:6060/v3/api-docs`
 
-La seguridad está configurada con esquema Bearer JWT.
+## Seguridad
 
-## Autenticación y seguridad
+- Público:
+  - `/api/v1/auth/**`
+  - `/swagger-ui/**`
+  - `/v3/api-docs/**`
+- Resto de endpoints: requiere `Authorization: Bearer <token>`.
 
-- `/api/v1/auth/**` es público.
-- Swagger (`/swagger-ui/**`, `/v3/api-docs/**`) es público.
-- El resto requiere `Authorization: Bearer <token>`.
-- Seguridad stateless (sin sesión).
+Roles soportados: `USER`, `ADMIN`.
 
-## Endpoints
+## Migraciones Flyway
+
+Directorio: `src/main/resources/db/migration`
+
+- `V1__users_roles.sql`
+- `V2__support_tickets.sql`
+- `V3__seed_test_data.sql`
+- `V4__fix_seed_user_passwords.sql`
+- `V5__trips_module.sql`
+- `V6__puesto_bicicleta_module.sql`
+
+## Módulos y endpoints
 
 ### Auth
 
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
 
+`login` responde:
+
+```json
+{
+  "token": "jwt",
+  "tokenType": "Bearer",
+  "expiresIn": 86400,
+  "userId": 1,
+  "email": "admin@cyclix.test"
+}
+```
+
 ### Usuarios
 
-Controlador mapeado en:
+Base mapping:
 - `/api/v1/get/user`
 - `/get/user`
 
@@ -96,73 +110,90 @@ Endpoints:
 - `PATCH /api/v1/get/user/{userId}/status`
 - `PATCH /api/v1/get/user/{userId}/role`
 
-### Viajes (usuario autenticado USER/ADMIN)
+### Soporte
 
+Usuario autenticado (`USER` o `ADMIN`):
+- `POST /api/v1/support/tickets`
+- `GET /api/v1/support/tickets/my`
+- `GET /api/v1/support/tickets/{id}`
+
+Admin (`ADMIN`):
+- `GET /api/v1/admin/support/tickets`
+- `PUT /api/v1/admin/support/tickets/{id}/status`
+- `PUT /api/v1/admin/support/tickets/{id}/priority`
+
+### Viajes
+
+Usuario autenticado (`USER` o `ADMIN`):
 - `POST /api/v1/trips`
 - `GET /api/v1/trips/my`
 - `GET /api/v1/trips/{id}`
 - `PUT /api/v1/trips/{id}/finish`
 
-### Viajes admin (solo ADMIN)
-
+Admin (`ADMIN`):
 - `GET /api/v1/admin/trips`
 - `GET /api/v1/admin/trips/{id}`
 - `PUT /api/v1/admin/trips/{id}/cancel`
 
-### Soporte (usuario autenticado USER/ADMIN)
+### Puestos
 
-- `POST /api/v1/support/tickets`
-- `GET /api/v1/support/tickets/my`
-- `GET /api/v1/support/tickets/{id}`
+- `GET /api/v1/puestos`
+- `GET /api/v1/puestos/activos`
+- `GET /api/v1/puestos/disponibles`
+- `GET /api/v1/puestos/{id}`
+- `POST /api/v1/puestos` (`ADMIN`)
+- `PUT /api/v1/puestos/{id}` (`ADMIN`)
+- `PATCH /api/v1/puestos/{id}/estado?nuevoEstado=ACTIVO` (`ADMIN`)
 
-### Soporte admin (solo ADMIN)
+Estados de puesto:
+- `ACTIVO`
+- `INACTIVO`
+- `MANTENIMIENTO`
 
-- `GET /api/v1/admin/support/tickets`
-- `PUT /api/v1/admin/support/tickets/{id}/status`
-- `PUT /api/v1/admin/support/tickets/{id}/priority`
+### Bicicletas
 
-## Reglas de negocio destacadas
+- `GET /api/v1/bicicletas`
+- `GET /api/v1/bicicletas/filtrar?estado=DISPONIBLE`
+- `GET /api/v1/bicicletas/filtrar?tipo=ELECTRICA`
+- `GET /api/v1/bicicletas/sin-puesto` (`ADMIN`)
+- `GET /api/v1/bicicletas/puesto/{puestoId}`
+- `GET /api/v1/bicicletas/puesto/{puestoId}/disponibles`
+- `GET /api/v1/bicicletas/{id}`
+- `GET /api/v1/bicicletas/qr/{codigoQr}`
+- `POST /api/v1/bicicletas` (`ADMIN`)
+- `PUT /api/v1/bicicletas/{id}` (`ADMIN`)
+- `PATCH /api/v1/bicicletas/{id}/estado`
 
-- Registro crea usuarios con rol `USER` y estado `ACTIVE`.
-- Login valida credenciales con BCrypt y devuelve JWT.
-- - Los viajes se crean en estado `ACTIVE`.
+Tipos de bicicleta:
+- `URBANA`
+- `MONTAÑA`
+- `ELECTRICA`
+
+Estados de bicicleta:
+- `DISPONIBLE`
+- `EN_USO`
+- `MANTENIMIENTO`
+- `FUERA_DE_SERVICIO`
+- `RESERVADA`
+
+## Reglas de negocio clave
+
+- Registro crea usuario con rol `USER` y estado `ACTIVE`.
 - Un usuario no puede tener más de un viaje `ACTIVE` al mismo tiempo.
-- Un viaje solo puede finalizarse si está en estado `ACTIVE`.
-- Al finalizar un viaje, pasa a estado `COMPLETED`, guarda coordenadas finales, distancia opcional y duración en segundos.
-- Un ADMIN puede consultar todos los viajes.
-- Un ADMIN puede cancelar viajes activos, dejándolos en estado `CANCELLED`.
-- `bikeId` en viajes se guarda como referencia numérica. Actualmente no tiene foreign key porque todavía no existe un módulo formal de bicicletas.
-- `EMERGENCY` en tickets fuerza prioridad `CRITICAL`.
-- Un ticket `EMERGENCY` no puede quedar con prioridad distinta de `CRITICAL`.
-- Validaciones de `bikeId`, `tripId`, `paymentId` se hacen contra tablas `bikes`, `trips`, `payments` usando JDBC.
-- Si esas tablas no existen en la BD actual, la API responde `400` para esos campos de referencia.
+- Un viaje solo se puede finalizar si está `ACTIVE`.
+- Categoría `EMERGENCY` fuerza prioridad `CRITICAL`.
+- En bicicletas:
+  - `codigo` es único.
+  - `puesto` es opcional.
+  - Al mover bicicletas entre puestos se ajusta capacidad disponible.
+  - No se puede cambiar estado de una bicicleta `FUERA_DE_SERVICIO`.
 
-## Base de datos y migraciones
+## Datos semilla
 
-Migraciones Flyway en `src/main/resources/db/migration`:
-- `V1__users_roles.sql`
-- `V2__support_tickets.sql`
-- `V3__seed_test_data.sql`
-- `V4__fix_seed_user_passwords.sql`
-- `V5__trips_module.sql`
-
-Entidades base creadas:
-- `roles`
-- `user_statuses`
-- `user`
-- `ticket_categories`
-- `ticket_priorities`
-- `ticket_statuses`
-- `support_tickets`
-- `trip_statuses`
-- `trips`
-
-## Datos semilla útiles
-
-Usuarios seed:
-- `admin@cyclix.test` / `Test1234*` (rol ADMIN)
-- `laura@cyclix.test` / `Test1234*` (rol USER)
-- `carlos@cyclix.test` / `Test1234*` (rol USER)
+Usuarios:
+- `admin@cyclix.test` / `Test1234*` (`ADMIN`)
+- `laura@cyclix.test` / `Test1234*` (`USER`)
+- `carlos@cyclix.test` / `Test1234*` (`USER`)
 
 ## Ejemplos rápidos
 
@@ -177,7 +208,54 @@ curl -X POST http://localhost:6060/api/v1/auth/login \
   }'
 ```
 
-### Crear ticket (con token)
+### Crear puesto (ADMIN)
+
+```bash
+curl -X POST http://localhost:6060/api/v1/puestos \
+  -H "Authorization: Bearer <TOKEN_ADMIN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Puesto Centro",
+    "codigo": "PST-001",
+    "direccion": "Centro de San José",
+    "latitud": 9.9281,
+    "longitud": -84.0907,
+    "capacidadTotal": 20
+  }'
+```
+
+### Crear bicicleta (ADMIN)
+
+```bash
+curl -X POST http://localhost:6060/api/v1/bicicletas \
+  -H "Authorization: Bearer <TOKEN_ADMIN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "codigo": "BIC-001",
+    "marca": "Trek",
+    "modelo": "FX 2",
+    "color": "Negro",
+    "tipo": "URBANA",
+    "tamanoLlanta": 29.0,
+    "precioPorHora": 1200.00,
+    "puestoId": 1
+  }'
+```
+
+### Crear viaje
+
+```bash
+curl -X POST http://localhost:6060/api/v1/trips \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bikeId": 1,
+    "startLatitude": 9.9281,
+    "startLongitude": -84.0907
+  }'
+```
+
+### Crear ticket
 
 ```bash
 curl -X POST http://localhost:6060/api/v1/support/tickets \
@@ -187,61 +265,22 @@ curl -X POST http://localhost:6060/api/v1/support/tickets \
     "category": "APP",
     "priority": "MEDIUM",
     "title": "Error al abrir mapa",
-    "description": "La app se cierra en Android al iniciar viaje"
+    "description": "La app se cierra al iniciar viaje"
   }'
 ```
 
-### Cambiar rol de usuario
-
-```bash
-curl -X PATCH http://localhost:6060/api/v1/get/user/2/role \
-  -H "Authorization: Bearer <TOKEN_ADMIN>" \
-  -H "Content-Type: application/json" \
-  -d '{"role":"ADMIN"}'
-```
-
-### Crear viaje (con token)
-```bash
-curl -X POST http://localhost:6060/api/v1/trips
-  -H "Authorization: Bearer " -H "Content-Type: application/json" -d '{ "bikeId": 101, "startLatitude": 9.9281, "startLongitude": -84.0907 }'
-```
-### Listar mis viajes
-```bash
-curl -X GET [http://localhost:6060/api/v1/trips/my](http://localhost:6060/api/v1/trips/my)
-  -H "Authorization: Bearer "
-```
-
-### Finalizar viaje
-```bash
-curl -X PUT http://localhost:6060/api/v1/trips/1/finish
-  -H "Authorization: Bearer " -H "Content-Type: application/json" -d '{ "endLatitude": 9.935, "endLongitude": -84.085, "distanceKm": 2.5 }'
-```
-
-### Listar todos los viajes como ADMIN
-```bash
-curl -X GET http://localhost:6060/api/v1/admin/trips
-  -H "Authorization: Bearer <TOKEN_ADMIN>"
-```
-
-### Cancelar viaje como ADMIN
-```bash
-curl -X PUT http://localhost:6060/api/v1/admin/trips/1/cancel
-  -H "Authorization: Bearer <TOKEN_ADMIN>"
-```
-
 ## Tests
-
-Actualmente existe un test básico de contexto (`contextLoads`):
 
 ```bash
 ./gradlew test
 ```
 
-## Estructura rápida
+## Estructura del código
 
-- `src/main/kotlin/com/cyclix/cyclix_api/auth`: auth, JWT, security
-- `src/main/kotlin/com/cyclix/cyclix_api/user`: usuarios, roles, estados
-- `src/main/kotlin/com/cyclix/cyclix_api/trip`: viajes, estados de viaje y endpoints de usuario/admin
-- `src/main/kotlin/com/cyclix/cyclix_api/support`: tickets de soporte
-- `src/main/kotlin/com/cyclix/cyclix_api/common/error`: manejo global de errores
-- `src/main/resources/db/migration`: migraciones Flyway
+- `src/main/kotlin/com/cyclix/cyclix_api/auth`
+- `src/main/kotlin/com/cyclix/cyclix_api/user`
+- `src/main/kotlin/com/cyclix/cyclix_api/support`
+- `src/main/kotlin/com/cyclix/cyclix_api/trip`
+- `src/main/kotlin/com/cyclix/cyclix_api/puesto`
+- `src/main/kotlin/com/cyclix/cyclix_api/bicycle`
+- `src/main/resources/db/migration`
