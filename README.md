@@ -1,6 +1,6 @@
 # Cyclix API
 
-Backend REST para autenticación, usuarios y soporte de la plataforma Cyclix.
+Backend REST para autenticación, usuarios, soporte y viajes de la plataforma Cyclix.
 
 Está construido con Kotlin + Spring Boot, usa JWT para autenticación, JPA/Flyway para persistencia y MariaDB como base de datos.
 
@@ -96,6 +96,19 @@ Endpoints:
 - `PATCH /api/v1/get/user/{userId}/status`
 - `PATCH /api/v1/get/user/{userId}/role`
 
+### Viajes (usuario autenticado USER/ADMIN)
+
+- `POST /api/v1/trips`
+- `GET /api/v1/trips/my`
+- `GET /api/v1/trips/{id}`
+- `PUT /api/v1/trips/{id}/finish`
+
+### Viajes admin (solo ADMIN)
+
+- `GET /api/v1/admin/trips`
+- `GET /api/v1/admin/trips/{id}`
+- `PUT /api/v1/admin/trips/{id}/cancel`
+
 ### Soporte (usuario autenticado USER/ADMIN)
 
 - `POST /api/v1/support/tickets`
@@ -112,6 +125,13 @@ Endpoints:
 
 - Registro crea usuarios con rol `USER` y estado `ACTIVE`.
 - Login valida credenciales con BCrypt y devuelve JWT.
+- - Los viajes se crean en estado `ACTIVE`.
+- Un usuario no puede tener más de un viaje `ACTIVE` al mismo tiempo.
+- Un viaje solo puede finalizarse si está en estado `ACTIVE`.
+- Al finalizar un viaje, pasa a estado `COMPLETED`, guarda coordenadas finales, distancia opcional y duración en segundos.
+- Un ADMIN puede consultar todos los viajes.
+- Un ADMIN puede cancelar viajes activos, dejándolos en estado `CANCELLED`.
+- `bikeId` en viajes se guarda como referencia numérica. Actualmente no tiene foreign key porque todavía no existe un módulo formal de bicicletas.
 - `EMERGENCY` en tickets fuerza prioridad `CRITICAL`.
 - Un ticket `EMERGENCY` no puede quedar con prioridad distinta de `CRITICAL`.
 - Validaciones de `bikeId`, `tripId`, `paymentId` se hacen contra tablas `bikes`, `trips`, `payments` usando JDBC.
@@ -124,6 +144,7 @@ Migraciones Flyway en `src/main/resources/db/migration`:
 - `V2__support_tickets.sql`
 - `V3__seed_test_data.sql`
 - `V4__fix_seed_user_passwords.sql`
+- `V5__trips_module.sql`
 
 Entidades base creadas:
 - `roles`
@@ -133,6 +154,8 @@ Entidades base creadas:
 - `ticket_priorities`
 - `ticket_statuses`
 - `support_tickets`
+- `trip_statuses`
+- `trips`
 
 ## Datos semilla útiles
 
@@ -177,6 +200,35 @@ curl -X PATCH http://localhost:6060/api/v1/get/user/2/role \
   -d '{"role":"ADMIN"}'
 ```
 
+### Crear viaje (con token)
+```bash
+curl -X POST http://localhost:6060/api/v1/trips
+  -H "Authorization: Bearer " -H "Content-Type: application/json" -d '{ "bikeId": 101, "startLatitude": 9.9281, "startLongitude": -84.0907 }'
+```
+### Listar mis viajes
+```bash
+curl -X GET [http://localhost:6060/api/v1/trips/my](http://localhost:6060/api/v1/trips/my)
+  -H "Authorization: Bearer "
+```
+
+### Finalizar viaje
+```bash
+curl -X PUT http://localhost:6060/api/v1/trips/1/finish
+  -H "Authorization: Bearer " -H "Content-Type: application/json" -d '{ "endLatitude": 9.935, "endLongitude": -84.085, "distanceKm": 2.5 }'
+```
+
+### Listar todos los viajes como ADMIN
+```bash
+curl -X GET http://localhost:6060/api/v1/admin/trips
+  -H "Authorization: Bearer <TOKEN_ADMIN>"
+```
+
+### Cancelar viaje como ADMIN
+```bash
+curl -X PUT http://localhost:6060/api/v1/admin/trips/1/cancel
+  -H "Authorization: Bearer <TOKEN_ADMIN>"
+```
+
 ## Tests
 
 Actualmente existe un test básico de contexto (`contextLoads`):
@@ -189,6 +241,7 @@ Actualmente existe un test básico de contexto (`contextLoads`):
 
 - `src/main/kotlin/com/cyclix/cyclix_api/auth`: auth, JWT, security
 - `src/main/kotlin/com/cyclix/cyclix_api/user`: usuarios, roles, estados
+- `src/main/kotlin/com/cyclix/cyclix_api/trip`: viajes, estados de viaje y endpoints de usuario/admin
 - `src/main/kotlin/com/cyclix/cyclix_api/support`: tickets de soporte
 - `src/main/kotlin/com/cyclix/cyclix_api/common/error`: manejo global de errores
 - `src/main/resources/db/migration`: migraciones Flyway
