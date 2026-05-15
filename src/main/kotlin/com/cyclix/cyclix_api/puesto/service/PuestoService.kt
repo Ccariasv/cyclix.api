@@ -53,14 +53,16 @@ class PuestoService(
 
     @Transactional
     fun crear(request: PuestoRequest): PuestoResponse {
+        val codigoNormalizado = request.codigo.uppercase()
+
         // RB-04: Validar que el código no se repita
-        if (puestoRepository.existsByCodigo(request.codigo)) {
+        if (puestoRepository.existsByCodigo(codigoNormalizado)) {
             throw IllegalArgumentException("Ya existe un puesto con el código '${request.codigo}'")
         }
 
         val nuevoPuesto = Puesto(
             nombre              = request.nombre,
-            codigo              = request.codigo.uppercase(), // guardamos en mayúsculas
+            codigo              = codigoNormalizado, // guardamos en mayúsculas
             direccion           = request.direccion,
             latitud             = request.latitud,
             longitud            = request.longitud,

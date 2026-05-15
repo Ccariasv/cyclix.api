@@ -6,6 +6,8 @@ import com.cyclix.cyclix_api.trip.dto.TripResponse
 import com.cyclix.cyclix_api.trip.entity.Trip
 import com.cyclix.cyclix_api.trip.entity.TripStatus
 import com.cyclix.cyclix_api.trip.repository.TripRepository
+import com.cyclix.cyclix_api.bicycle.model.EstadoBicicleta
+import com.cyclix.cyclix_api.bicycle.repository.BicicletaRepository
 import com.cyclix.cyclix_api.user.User
 import com.cyclix.cyclix_api.user.UserRepository
 import org.springframework.http.HttpStatus
@@ -19,11 +21,16 @@ import java.time.LocalDateTime
 @Service
 class TripService(
     private val tripRepository: TripRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val bicicletaRepository: BicicletaRepository
 ) {
     @Transactional
     fun createTrip(request: CreateTripRequest): TripResponse {
         val currentUser = getCurrentUser()
+        val bikeId = request.bikeId ?: throw ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "El ID de la bicicleta es obligatorio"
+        )
 
         if (tripRepository.existsByUserIdAndStatus(currentUser.id, TripStatus.ACTIVE)) {
             throw ResponseStatusException(
@@ -32,12 +39,21 @@ class TripService(
             )
         }
 
+        val bicicleta = bicicletaRepository.findById(bikeId)
+            .orElseThrow {
+                ResponseStatusException(HttpStatus.BAD_REQUEST, "La bicicleta indicada no existe")
+            }
+
+        if (bicicleta.estado != EstadoBicicleta.DISPONIBLE) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "La bicicleta no está disponible para iniciar un viaje"
+            )
+        }
+
         val trip = Trip(
             user = currentUser,
-            bikeId = request.bikeId ?: throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "El ID de la bicicleta es obligatorio"
-            ),
+            bikeId = bikeId,
             status = TripStatus.ACTIVE,
             startLatitude = request.startLatitude ?: throw ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
@@ -46,6 +62,13 @@ class TripService(
             startLongitude = request.startLongitude ?: throw ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
                 "La longitud inicial es obligatoria"
+            )
+        )
+
+        bicicletaRepository.save(
+            bicicleta.copy(
+                estado = EstadoBicicleta.EN_USO,
+                updatedAt = LocalDateTime.now()
             )
         )
 
@@ -102,6 +125,18 @@ class TripService(
         trip.distanceKm = request.distanceKm
         trip.durationSeconds = Duration.between(trip.startedAt, endedAt).seconds
 
+        val bicicleta = bicicletaRepository.findById(trip.bikeId)
+            .orElseThrow {
+                ResponseStatusException(HttpStatus.BAD_REQUEST, "La bicicleta del viaje no existe")
+            }
+
+        bicicletaRepository.save(
+            bicicleta.copy(
+                estado = EstadoBicicleta.DISPONIBLE,
+                updatedAt = LocalDateTime.now()
+            )
+        )
+
         return trip.toResponse()
     }
 
@@ -130,6 +165,18 @@ class TripService(
         trip.status = TripStatus.CANCELLED
         trip.endedAt = endedAt
         trip.durationSeconds = Duration.between(trip.startedAt, endedAt).seconds
+
+        val bicicleta = bicicletaRepository.findById(trip.bikeId)
+            .orElseThrow {
+                ResponseStatusException(HttpStatus.BAD_REQUEST, "La bicicleta del viaje no existe")
+            }
+
+        bicicletaRepository.save(
+            bicicleta.copy(
+                estado = EstadoBicicleta.DISPONIBLE,
+                updatedAt = LocalDateTime.now()
+            )
+        )
 
         return trip.toResponse()
     }
