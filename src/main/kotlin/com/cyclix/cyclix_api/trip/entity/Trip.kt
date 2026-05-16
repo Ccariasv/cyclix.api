@@ -59,6 +59,42 @@ class Trip(
     @Column(name = "duration_seconds")
     var durationSeconds: Long? = null,
 
+    @Column(name = "pricing_rule_id")
+    var pricingRuleId: Long? = null,
+
+    @Column(name = "pricing_rule_name", length = 120)
+    var pricingRuleName: String? = null,
+
+    @Column(name = "subscription_applied", nullable = false)
+    var subscriptionApplied: Boolean = false,
+
+    @Column(name = "subscription_minutes_covered")
+    var subscriptionMinutesCovered: Int? = null,
+
+    @Column(name = "billable_minutes")
+    var billableMinutes: Int? = null,
+
+    @Column(name = "base_fare_applied", precision = 12, scale = 2)
+    var baseFareApplied: BigDecimal? = null,
+
+    @Column(name = "included_minutes_applied")
+    var includedMinutesApplied: Int? = null,
+
+    @Column(name = "extra_fare_per_block_applied", precision = 12, scale = 2)
+    var extraFarePerBlockApplied: BigDecimal? = null,
+
+    @Column(name = "extra_block_minutes_applied")
+    var extraBlockMinutesApplied: Int? = null,
+
+    @Column(name = "extra_amount", precision = 12, scale = 2)
+    var extraAmount: BigDecimal? = null,
+
+    @Column(name = "total_amount", precision = 12, scale = 2)
+    var totalAmount: BigDecimal? = null,
+
+    @Column(name = "wallet_charged_amount", precision = 12, scale = 2)
+    var walletChargedAmount: BigDecimal? = null,
+
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: LocalDateTime = LocalDateTime.now(),
 

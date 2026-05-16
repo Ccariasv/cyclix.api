@@ -6,6 +6,10 @@ import com.cyclix.cyclix_api.trip.dto.TripResponse
 import com.cyclix.cyclix_api.trip.entity.Trip
 import com.cyclix.cyclix_api.trip.entity.TripStatus
 import com.cyclix.cyclix_api.trip.repository.TripRepository
+import com.cyclix.cyclix_api.pricing.service.PricingService
+import com.cyclix.cyclix_api.subscription.service.SubscriptionService
+import com.cyclix.cyclix_api.wallet.service.WalletService
+import com.cyclix.cyclix_api.audit.service.AuditService
 import com.cyclix.cyclix_api.bicycle.model.EstadoBicicleta
 import com.cyclix.cyclix_api.bicycle.repository.BicicletaRepository
 import com.cyclix.cyclix_api.user.User
@@ -22,7 +26,11 @@ import java.time.LocalDateTime
 class TripService(
     private val tripRepository: TripRepository,
     private val userRepository: UserRepository,
-    private val bicicletaRepository: BicicletaRepository
+    private val bicicletaRepository: BicicletaRepository,
+    private val pricingService: PricingService,
+    private val subscriptionService: SubscriptionService,
+    private val walletService: WalletService,
+    private val auditService: AuditService
 ) {
     @Transactional
     fun createTrip(request: CreateTripRequest): TripResponse {
@@ -124,6 +132,24 @@ class TripService(
         trip.endedAt = endedAt
         trip.distanceKm = request.distanceKm
         trip.durationSeconds = Duration.between(trip.startedAt, endedAt).seconds
+        val tripDurationMinutes = kotlin.math.ceil((trip.durationSeconds ?: 0L).toDouble() / 60.0).toInt().coerceAtLeast(0)
+
+        val subscriptionResult = subscriptionService.consumeMinutes(currentUser.id, tripDurationMinutes, endedAt)
+        val pricingCalculation = pricingService.calculate(endedAt, subscriptionResult.billableMinutes)
+        val chargedAmount = walletService.debitForTrip(currentUser.id, trip.id, pricingCalculation.totalAmount)
+
+        trip.subscriptionApplied = subscriptionResult.minutesCovered > 0
+        trip.subscriptionMinutesCovered = subscriptionResult.minutesCovered
+        trip.billableMinutes = subscriptionResult.billableMinutes
+        trip.pricingRuleId = pricingCalculation.ruleId
+        trip.pricingRuleName = pricingCalculation.ruleName
+        trip.baseFareApplied = pricingCalculation.baseFareApplied
+        trip.includedMinutesApplied = pricingCalculation.includedMinutesApplied
+        trip.extraFarePerBlockApplied = pricingCalculation.extraFarePerBlockApplied
+        trip.extraBlockMinutesApplied = pricingCalculation.extraBlockMinutesApplied
+        trip.extraAmount = pricingCalculation.extraAmount
+        trip.totalAmount = pricingCalculation.totalAmount
+        trip.walletChargedAmount = chargedAmount
 
         val bicicleta = bicicletaRepository.findById(trip.bikeId)
             .orElseThrow {
@@ -135,6 +161,14 @@ class TripService(
                 estado = EstadoBicicleta.DISPONIBLE,
                 updatedAt = LocalDateTime.now()
             )
+        )
+
+        auditService.log(
+            eventType = "TRIP_FINISHED",
+            entityType = "trip",
+            entityId = trip.id,
+            details = "Viaje finalizado. Total=${trip.totalAmount}, CobroWallet=${trip.walletChargedAmount}",
+            user = currentUser
         )
 
         return trip.toResponse()
@@ -214,6 +248,18 @@ class TripService(
             endedAt = endedAt,
             distanceKm = distanceKm,
             durationSeconds = durationSeconds,
+            pricingRuleId = pricingRuleId,
+            pricingRuleName = pricingRuleName,
+            subscriptionApplied = subscriptionApplied,
+            subscriptionMinutesCovered = subscriptionMinutesCovered,
+            billableMinutes = billableMinutes,
+            baseFareApplied = baseFareApplied,
+            includedMinutesApplied = includedMinutesApplied,
+            extraFarePerBlockApplied = extraFarePerBlockApplied,
+            extraBlockMinutesApplied = extraBlockMinutesApplied,
+            extraAmount = extraAmount,
+            totalAmount = totalAmount,
+            walletChargedAmount = walletChargedAmount,
             createdAt = createdAt,
             updatedAt = updatedAt
         )

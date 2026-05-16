@@ -17,6 +17,18 @@ data class TripResponse(
     val endedAt: LocalDateTime?,
     val distanceKm: BigDecimal?,
     val durationSeconds: Long?,
+    val pricingRuleId: Long?,
+    val pricingRuleName: String?,
+    val subscriptionApplied: Boolean,
+    val subscriptionMinutesCovered: Int?,
+    val billableMinutes: Int?,
+    val baseFareApplied: BigDecimal?,
+    val includedMinutesApplied: Int?,
+    val extraFarePerBlockApplied: BigDecimal?,
+    val extraBlockMinutesApplied: Int?,
+    val extraAmount: BigDecimal?,
+    val totalAmount: BigDecimal?,
+    val walletChargedAmount: BigDecimal?,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 )
