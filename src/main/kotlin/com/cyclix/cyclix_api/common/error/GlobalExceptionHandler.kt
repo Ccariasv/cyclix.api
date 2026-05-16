@@ -9,10 +9,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.server.ResponseStatusException
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+    private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidation(ex: MethodArgumentNotValidException): ResponseEntity<Map<String, Any>> {
         val errors = ex.bindingResult.allErrors.associate { error ->
@@ -42,8 +44,10 @@ class GlobalExceptionHandler {
         buildResponse(HttpStatus.BAD_REQUEST, "Formato de request inválido")
 
     @ExceptionHandler(Exception::class)
-    fun handleUnexpected(ex: Exception): ResponseEntity<Map<String, Any>> =
-        buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor")
+    fun handleUnexpected(ex: Exception): ResponseEntity<Map<String, Any>> {
+        log.error("Unhandled exception in request processing", ex)
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor")
+    }
 
     private fun buildResponse(
         status: HttpStatus,

@@ -36,7 +36,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
 	// OpenAPI / Swagger
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
 
 	// Jackson para Kotlin
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
