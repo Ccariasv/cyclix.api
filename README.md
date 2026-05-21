@@ -326,9 +326,13 @@ Estados de puesto:
 
 ### Bicicletas
 
-- `GET /api/v1/bicicletas`
-- `GET /api/v1/bicicletas/filtrar?estado=DISPONIBLE`
-- `GET /api/v1/bicicletas/filtrar?tipo=ELECTRICA`
+- `GET /api/v1/bicicletas` (publico)
+- `GET /api/v1/bicicletas?estado=DISPONIBLE` (publico)
+- `GET /api/v1/bicicletas?tipo=ELECTRICA` (publico)
+- `GET /api/v1/bicicletas?puestoId=1` (publico)
+- `GET /api/v1/bicicletas?puestoId=1&soloDisponibles=true` (publico)
+- `GET /api/v1/bicicletas/filtrar?estado=DISPONIBLE` (publico, compatibilidad)
+- `GET /api/v1/bicicletas/filtrar?tipo=ELECTRICA` (publico, compatibilidad)
 - `GET /api/v1/bicicletas/sin-puesto` (`ADMIN`)
 - `GET /api/v1/bicicletas/puesto/{puestoId}`
 - `GET /api/v1/bicicletas/puesto/{puestoId}/disponibles`
@@ -337,6 +341,7 @@ Estados de puesto:
 - `POST /api/v1/bicicletas` (`ADMIN`)
 - `PUT /api/v1/bicicletas/{id}` (`ADMIN`)
 - `PATCH /api/v1/bicicletas/{id}/estado`
+- `DELETE /api/v1/bicicletas/{id}` (`ADMIN`, baja logica)
 
 Payloads:
 - `POST/PUT /api/v1/bicicletas`

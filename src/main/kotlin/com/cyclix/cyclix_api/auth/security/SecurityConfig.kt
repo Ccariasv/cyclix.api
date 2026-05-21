@@ -2,6 +2,7 @@ package com.cyclix.cyclix_api.auth.security
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -28,6 +29,7 @@ class SecurityConfig(
                         "/swagger-ui.html",
                         "/v3/api-docs/**"
                     ).permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/bicicletas", "/api/v1/bicicletas/filtrar").permitAll()
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

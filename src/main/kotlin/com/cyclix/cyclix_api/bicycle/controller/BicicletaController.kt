@@ -25,11 +25,16 @@ class BicicletaController(
 
     // --------------------------------------------------
     //  GET /api/v1/bicicletas
-    //  Listar todas las bicicletas
+    //  Listar bicicletas con filtros opcionales
     // --------------------------------------------------
     @GetMapping
-    fun listarTodas(): ResponseEntity<ApiResponse<Any>> {
-        val bicis = bicicletaService.listarTodas()
+    fun listarTodas(
+        @RequestParam(required = false) estado: EstadoBicicleta?,
+        @RequestParam(required = false) tipo: TipoBicicleta?,
+        @RequestParam(required = false) puestoId: Long?,
+        @RequestParam(defaultValue = "false") soloDisponibles: Boolean
+    ): ResponseEntity<ApiResponse<Any>> {
+        val bicis = bicicletaService.listar(estado, tipo, puestoId, soloDisponibles)
         return ResponseEntity.ok(ApiResponse(true, "Bicicletas obtenidas", bicis))
     }
 
@@ -43,11 +48,7 @@ class BicicletaController(
         @RequestParam(required = false) estado: EstadoBicicleta?,
         @RequestParam(required = false) tipo: TipoBicicleta?
     ): ResponseEntity<ApiResponse<Any>> {
-        val resultado = when {
-            estado != null -> bicicletaService.listarPorEstado(estado)
-            tipo   != null -> bicicletaService.listarPorTipo(tipo)
-            else           -> bicicletaService.listarTodas()
-        }
+        val resultado = bicicletaService.listar(estado, tipo)
         return ResponseEntity.ok(ApiResponse(true, "Bicicletas filtradas", resultado))
     }
 
@@ -180,6 +181,22 @@ class BicicletaController(
         } catch (e: IllegalStateException) {
             ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse(false, e.message ?: "Cambio de estado no permitido"))
+        }
+    }
+
+    // --------------------------------------------------
+    //  DELETE /api/v1/bicicletas/{id}
+    //  Baja lógica de una bicicleta (solo ADMIN)
+    // --------------------------------------------------
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    fun darDeBaja(@PathVariable id: Long): ResponseEntity<ApiResponse<Any>> {
+        return try {
+            val actualizada = bicicletaService.darDeBaja(id)
+            ResponseEntity.ok(ApiResponse(true, "Bicicleta dada de baja", actualizada))
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse(false, e.message ?: "No encontrada"))
         }
     }
 }
