@@ -44,6 +44,24 @@ class BicicletaService(
     fun listarTodas(): List<BicicletaResumenResponse> =
         bicicletaRepository.findAll().map { it.toResumenResponse() }
 
+    fun listar(
+        estado: EstadoBicicleta? = null,
+        tipo: TipoBicicleta? = null,
+        puestoId: Long? = null,
+        soloDisponibles: Boolean = false
+    ): List<BicicletaResumenResponse> {
+        val bicicletas = when {
+            puestoId != null && soloDisponibles -> bicicletaRepository.findDisponiblesEnPuesto(puestoId)
+            puestoId != null -> bicicletaRepository.findByPuestoId(puestoId)
+            estado != null -> bicicletaRepository.findByEstado(estado)
+            tipo != null -> bicicletaRepository.findByTipo(tipo)
+            soloDisponibles -> bicicletaRepository.findByEstado(EstadoBicicleta.DISPONIBLE)
+            else -> bicicletaRepository.findAll()
+        }
+
+        return bicicletas.map { it.toResumenResponse() }
+    }
+
     fun listarPorEstado(estado: EstadoBicicleta): List<BicicletaResumenResponse> =
         bicicletaRepository.findByEstado(estado).map { it.toResumenResponse() }
 
@@ -184,16 +202,21 @@ class BicicletaService(
     }
 
     // --------------------------------------------------
-    //  ACTUALIZAR UBICACION
+    //  DAR DE BAJA
     // --------------------------------------------------
+
     @Transactional
-    fun actualizarUbicacion(id: Long, request: UbicacionRequest): BicicletaResponse {
+    fun darDeBaja(id: Long): BicicletaResponse {
         val bici = buscarBiciOFallar(id)
+
+        bici.puesto?.let { aumentarCapacidadPuesto(it) }
+
         val actualizada = bici.copy(
-            latitud = request.latitud,
-            longitud = request.longitud,
+            estado = EstadoBicicleta.FUERA_DE_SERVICIO,
+            puesto = null,
             updatedAt = LocalDateTime.now()
         )
+
         return bicicletaRepository.save(actualizada).toResponse()
     }
 

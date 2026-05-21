@@ -26,11 +26,16 @@ class BicicletaController(
 
     // --------------------------------------------------
     //  GET /api/v1/bicicletas
-    //  Listar todas las bicicletas
+    //  Listar bicicletas con filtros opcionales
     // --------------------------------------------------
     @GetMapping
-    fun listarTodas(): ResponseEntity<ApiResponse<Any>> {
-        val bicis = bicicletaService.listarTodas()
+    fun listarTodas(
+        @RequestParam(required = false) estado: EstadoBicicleta?,
+        @RequestParam(required = false) tipo: TipoBicicleta?,
+        @RequestParam(required = false) puestoId: Long?,
+        @RequestParam(defaultValue = "false") soloDisponibles: Boolean
+    ): ResponseEntity<ApiResponse<Any>> {
+        val bicis = bicicletaService.listar(estado, tipo, puestoId, soloDisponibles)
         return ResponseEntity.ok(ApiResponse(true, "Bicicletas obtenidas", bicis))
     }
 
@@ -44,11 +49,7 @@ class BicicletaController(
         @RequestParam(required = false) estado: EstadoBicicleta?,
         @RequestParam(required = false) tipo: TipoBicicleta?
     ): ResponseEntity<ApiResponse<Any>> {
-        val resultado = when {
-            estado != null -> bicicletaService.listarPorEstado(estado)
-            tipo   != null -> bicicletaService.listarPorTipo(tipo)
-            else           -> bicicletaService.listarTodas()
-        }
+        val resultado = bicicletaService.listar(estado, tipo)
         return ResponseEntity.ok(ApiResponse(true, "Bicicletas filtradas", resultado))
     }
 
@@ -185,58 +186,18 @@ class BicicletaController(
     }
 
     // --------------------------------------------------
-    //  PATCH /api/v1/bicicletas/{id}/ubicacion
-    //  Actualizar ubicación GPS de una bicicleta (ESP32/Pruebas)
+    //  DELETE /api/v1/bicicletas/{id}
+    //  Baja lógica de una bicicleta (solo ADMIN)
     // --------------------------------------------------
-    @PatchMapping("/{id}/ubicacion")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    fun actualizarUbicacion(
-        @PathVariable id: Long,
-        @Valid @RequestBody request: UbicacionRequest
-    ): ResponseEntity<ApiResponse<Any>> {
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    fun darDeBaja(@PathVariable id: Long): ResponseEntity<ApiResponse<Any>> {
         return try {
-            val actualizada = bicicletaService.actualizarUbicacion(id, request)
-            ResponseEntity.ok(ApiResponse(true, "Ubicación actualizada correctamente", actualizada))
+            val actualizada = bicicletaService.darDeBaja(id)
+            ResponseEntity.ok(ApiResponse(true, "Bicicleta dada de baja", actualizada))
         } catch (e: NoSuchElementException) {
             ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse(false, e.message ?: "No encontrada"))
         }
-    }
-
-    // --------------------------------------------------
-    //  GET /api/v1/bicicletas/{id}/ubicacion
-    //  Obtener ubicación actual de una bicicleta específica
-    // --------------------------------------------------
-    @GetMapping("/{id}/ubicacion")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    fun obtenerUbicacion(@PathVariable id: Long): ResponseEntity<ApiResponse<Any>> {
-        return try {
-            val bici = bicicletaService.obtenerPorId(id)
-            val ubicacion = mapOf("latitud" to bici.latitud, "longitud" to bici.longitud)
-            ResponseEntity.ok(ApiResponse(true, "Ubicación obtenida", ubicacion))
-        } catch (e: NoSuchElementException) {
-            ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse(false, e.message ?: "No encontrada"))
-        }
-    }
-
-    // --------------------------------------------------
-    //  GET /api/v1/bicicletas/ubicaciones
-    //  Obtener ubicaciones de todas las bicicletas
-    // --------------------------------------------------
-    @GetMapping("/ubicaciones")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    fun obtenerUbicaciones(): ResponseEntity<ApiResponse<Any>> {
-        val bicis = bicicletaService.listarTodas()
-        val ubicaciones = bicis.map {
-            mapOf(
-                "id" to it.id,
-                "codigo" to it.codigo,
-                "estado" to it.estado,
-                "latitud" to it.latitud,
-                "longitud" to it.longitud
-            )
-        }
-        return ResponseEntity.ok(ApiResponse(true, "Ubicaciones obtenidas", ubicaciones))
     }
 }
