@@ -1,5 +1,6 @@
 package com.cyclix.cyclix_api.support.service
 
+import com.cyclix.cyclix_api.support.dto.CreateFailureReportRequest
 import com.cyclix.cyclix_api.support.dto.CreateSupportTicketRequest
 import com.cyclix.cyclix_api.support.dto.SupportTicketResponse
 import com.cyclix.cyclix_api.support.entity.SupportTicket
@@ -48,6 +49,37 @@ class SupportTicketService(
             paymentId = request.paymentId,
             category = request.category,
             priority = resolvedPriority,
+            status = TicketStatus.OPEN,
+            title = title,
+            description = description
+        )
+
+        return supportTicketRepository.save(ticket).toResponse()
+    }
+
+    @Transactional
+    fun createFailureReport(request: CreateFailureReportRequest): SupportTicketResponse {
+        val currentUser = getCurrentUser()
+        val title = request.title.trim()
+        val description = request.description.trim()
+
+        if (title.isBlank()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El título es obligatorio")
+        }
+        if (description.isBlank()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "La descripción es obligatoria")
+        }
+
+        // Validar referencias: bikeId es obligatorio para una falla, tripId es opcional
+        supportReferenceValidator.validateReferences(request.bikeId, request.tripId, null)
+
+        val ticket = SupportTicket(
+            user = currentUser,
+            bikeId = request.bikeId,
+            tripId = request.tripId,
+            paymentId = null,
+            category = TicketCategory.BIKE,
+            priority = request.priority ?: TicketPriority.MEDIUM,
             status = TicketStatus.OPEN,
             title = title,
             description = description

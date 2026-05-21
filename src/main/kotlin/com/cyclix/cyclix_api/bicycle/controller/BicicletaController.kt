@@ -4,6 +4,7 @@ package com.cyclix.cyclix_api.bicycle.controller
 import com.cyclix.cyclix_api.bicycle.dto.ApiResponse
 import com.cyclix.cyclix_api.bicycle.dto.BicicletaRequest
 import com.cyclix.cyclix_api.bicycle.dto.CambiarEstadoRequest
+import com.cyclix.cyclix_api.bicycle.dto.UbicacionRequest
 import com.cyclix.cyclix_api.bicycle.model.EstadoBicicleta
 import com.cyclix.cyclix_api.bicycle.model.TipoBicicleta
 import com.cyclix.cyclix_api.bicycle.service.BicicletaService

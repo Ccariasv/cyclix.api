@@ -69,6 +69,12 @@ data class Bicicleta(
     @JoinColumn(name = "puesto_id", nullable = true)
     val puesto: Puesto? = null,
 
+    @Column(name = "latitud", nullable = true)
+    val latitud: Double? = null,
+
+    @Column(name = "longitud", nullable = true)
+    val longitud: Double? = null,
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
