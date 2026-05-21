@@ -78,6 +78,42 @@ class SupportTicketService(
         supportTicketRepository.findAllByOrderByCreatedAtDesc()
             .map { it.toResponse() }
 
+    @Transactional(readOnly = true)
+    fun getMyFailureReports(): List<SupportTicketResponse> {
+        val currentUser = getCurrentUser()
+        return supportTicketRepository
+            .findAllByUserIdAndCategoryOrderByCreatedAtDesc(currentUser.id, TicketCategory.BIKE)
+            .map { it.toResponse() }
+    }
+
+    @Transactional(readOnly = true)
+    fun getMyFailureReportById(reportId: Long): SupportTicketResponse {
+        val currentUser = getCurrentUser()
+        return supportTicketRepository
+            .findByIdAndUserIdAndCategory(reportId, currentUser.id, TicketCategory.BIKE)
+            .orElseThrow {
+                ResponseStatusException(HttpStatus.NOT_FOUND, "Reporte de falla no encontrado: $reportId")
+            }
+            .toResponse()
+    }
+
+    @Transactional(readOnly = true)
+    fun getAllFailureReportsForAdmin(): List<SupportTicketResponse> =
+        supportTicketRepository.findAllByCategoryOrderByCreatedAtDesc(TicketCategory.BIKE)
+            .map { it.toResponse() }
+
+    @Transactional(readOnly = true)
+    fun getFailureReportByIdForAdmin(reportId: Long): SupportTicketResponse =
+        findFailureReportOrThrow(reportId).toResponse()
+
+    @Transactional
+    fun updateFailureReportStatusForAdmin(reportId: Long, rawStatus: String): SupportTicketResponse {
+        val report = findFailureReportOrThrow(reportId)
+        val newStatus = parseEnum<TicketStatus>(rawStatus, "status")
+        report.status = newStatus
+        return report.toResponse()
+    }
+
     @Transactional
     fun updateStatusForAdmin(ticketId: Long, rawStatus: String): SupportTicketResponse {
         val ticket = findTicketOrThrow(ticketId)
@@ -110,6 +146,11 @@ class SupportTicketService(
     private fun findTicketOrThrow(ticketId: Long): SupportTicket =
         supportTicketRepository.findById(ticketId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket no encontrado: $ticketId")
+        }
+
+    private fun findFailureReportOrThrow(reportId: Long): SupportTicket =
+        supportTicketRepository.findByIdAndCategory(reportId, TicketCategory.BIKE).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "Reporte de falla no encontrado: $reportId")
         }
 
     private fun getCurrentUser(): User {
