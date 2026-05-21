@@ -174,6 +174,20 @@ class BicicletaService(
     }
 
     // --------------------------------------------------
+    //  ACTUALIZAR UBICACION
+    // --------------------------------------------------
+    @Transactional
+    fun actualizarUbicacion(id: Long, request: UbicacionRequest): BicicletaResponse {
+        val bici = buscarBiciOFallar(id)
+        val actualizada = bici.copy(
+            latitud = request.latitud,
+            longitud = request.longitud,
+            updatedAt = LocalDateTime.now()
+        )
+        return bicicletaRepository.save(actualizada).toResponse()
+    }
+
+    // --------------------------------------------------
     //  FUNCIONES PRIVADAS DE APOYO
     // --------------------------------------------------
 
@@ -213,34 +227,67 @@ class BicicletaService(
     //  CONVERSIONES Entity → DTO
     // --------------------------------------------------
 
-    private fun Bicicleta.toResponse() = BicicletaResponse(
-        id            = id,
-        codigo        = codigo,
-        marca         = marca,
-        modelo        = modelo,
-        color         = color,
-        tipo          = tipo,
-        tamanoLlanta  = tamanoLlanta,
-        precioPorHora = precioPorHora,
-        estado        = estado,
-        codigoQr      = codigoQr,
-        puesto        = puesto?.toPuestoInfoDto(),
-        createdAt     = createdAt,
-        updatedAt     = updatedAt
-    )
+    private fun getCoordenadasSimuladas(id: Long): Pair<Double, Double> {
+        val zacapaCoords = listOf(
+            Pair(14.9722, -89.5305), // Parque Central de Zacapa
+            Pair(14.9772, -89.5248), // Calzada de la Revolución
+            Pair(14.9654, -89.5398), // Pradera Zacapa
+            Pair(14.9815, -89.5212), // Hospital Regional
+            Pair(14.9712, -89.5265), // 3a Calle / 15 Avenida
+            Pair(14.9610, -89.5420), // Boulevard Alvaro Arzú
+            Pair(14.9785, -89.5350), // Barrio La Reforma
+            Pair(14.9738, -89.5288)  // Barrio El Centro
+        )
+        val index = (id % zacapaCoords.size).toInt()
+        return zacapaCoords[index]
+    }
 
-    private fun Bicicleta.toResumenResponse() = BicicletaResumenResponse(
-        id            = id,
-        codigo        = codigo,
-        marca         = marca,
-        modelo        = modelo,
-        color         = color,
-        tipo          = tipo,
-        tamanoLlanta  = tamanoLlanta,
-        precioPorHora = precioPorHora,
-        estado        = estado,
-        puesto        = puesto?.toPuestoInfoDto()
-    )
+    private fun Bicicleta.toResponse(): BicicletaResponse {
+        val coords = if (latitud != null && longitud != null) {
+            Pair(latitud, longitud)
+        } else {
+            getCoordenadasSimuladas(id)
+        }
+        return BicicletaResponse(
+            id            = id,
+            codigo        = codigo,
+            marca         = marca,
+            modelo        = modelo,
+            color         = color,
+            tipo          = tipo,
+            tamanoLlanta  = tamanoLlanta,
+            precioPorHora = precioPorHora,
+            estado        = estado,
+            codigoQr      = codigoQr,
+            latitud       = coords.first,
+            longitud      = coords.second,
+            puesto        = puesto?.toPuestoInfoDto(),
+            createdAt     = createdAt,
+            updatedAt     = updatedAt
+        )
+    }
+
+    private fun Bicicleta.toResumenResponse(): BicicletaResumenResponse {
+        val coords = if (latitud != null && longitud != null) {
+            Pair(latitud, longitud)
+        } else {
+            getCoordenadasSimuladas(id)
+        }
+        return BicicletaResumenResponse(
+            id            = id,
+            codigo        = codigo,
+            marca         = marca,
+            modelo        = modelo,
+            color         = color,
+            tipo          = tipo,
+            tamanoLlanta  = tamanoLlanta,
+            precioPorHora = precioPorHora,
+            estado        = estado,
+            latitud       = coords.first,
+            longitud      = coords.second,
+            puesto        = puesto?.toPuestoInfoDto()
+        )
+    }
 
     private fun Puesto.toPuestoInfoDto() = PuestoInfoDto(
         id        = id,

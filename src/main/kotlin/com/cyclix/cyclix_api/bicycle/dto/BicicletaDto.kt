@@ -76,6 +76,8 @@ data class BicicletaResponse(
     val precioPorHora: BigDecimal,
     val estado: EstadoBicicleta,
     val codigoQr: String?,
+    val latitud: Double?,
+    val longitud: Double?,
     /** Info del puesto — null si está en mantenimiento/tránsito */
     val puesto: PuestoInfoDto?,
     val createdAt: LocalDateTime,
@@ -96,7 +98,24 @@ data class BicicletaResumenResponse(
     val tamanoLlanta: Double,
     val precioPorHora: BigDecimal,
     val estado: EstadoBicicleta,
+    val latitud: Double?,
+    val longitud: Double?,
     val puesto: PuestoInfoDto?
+)
+
+/**
+ * UbicacionRequest: DTO para recibir la ubicación enviada por el ESP32 o por pruebas.
+ */
+data class UbicacionRequest(
+    @field:NotNull(message = "La latitud es obligatoria")
+    @field:DecimalMin(value = "-90.0", message = "La latitud debe ser mayor o igual a -90")
+    @field:DecimalMax(value = "90.0", message = "La latitud debe ser menor o igual a 90")
+    val latitud: Double,
+
+    @field:NotNull(message = "La longitud es obligatoria")
+    @field:DecimalMin(value = "-180.0", message = "La longitud debe ser mayor o igual a -180")
+    @field:DecimalMax(value = "180.0", message = "La longitud debe ser menor o igual a 180")
+    val longitud: Double
 )
 
 /**

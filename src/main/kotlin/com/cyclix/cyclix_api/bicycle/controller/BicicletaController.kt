@@ -4,6 +4,7 @@ package com.cyclix.cyclix_api.bicycle.controller
 import com.cyclix.cyclix_api.bicycle.dto.ApiResponse
 import com.cyclix.cyclix_api.bicycle.dto.BicicletaRequest
 import com.cyclix.cyclix_api.bicycle.dto.CambiarEstadoRequest
+import com.cyclix.cyclix_api.bicycle.dto.UbicacionRequest
 import com.cyclix.cyclix_api.bicycle.model.EstadoBicicleta
 import com.cyclix.cyclix_api.bicycle.model.TipoBicicleta
 import com.cyclix.cyclix_api.bicycle.service.BicicletaService
@@ -181,5 +182,61 @@ class BicicletaController(
             ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse(false, e.message ?: "Cambio de estado no permitido"))
         }
+    }
+
+    // --------------------------------------------------
+    //  PATCH /api/v1/bicicletas/{id}/ubicacion
+    //  Actualizar ubicación GPS de una bicicleta (ESP32/Pruebas)
+    // --------------------------------------------------
+    @PatchMapping("/{id}/ubicacion")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    fun actualizarUbicacion(
+        @PathVariable id: Long,
+        @Valid @RequestBody request: UbicacionRequest
+    ): ResponseEntity<ApiResponse<Any>> {
+        return try {
+            val actualizada = bicicletaService.actualizarUbicacion(id, request)
+            ResponseEntity.ok(ApiResponse(true, "Ubicación actualizada correctamente", actualizada))
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse(false, e.message ?: "No encontrada"))
+        }
+    }
+
+    // --------------------------------------------------
+    //  GET /api/v1/bicicletas/{id}/ubicacion
+    //  Obtener ubicación actual de una bicicleta específica
+    // --------------------------------------------------
+    @GetMapping("/{id}/ubicacion")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    fun obtenerUbicacion(@PathVariable id: Long): ResponseEntity<ApiResponse<Any>> {
+        return try {
+            val bici = bicicletaService.obtenerPorId(id)
+            val ubicacion = mapOf("latitud" to bici.latitud, "longitud" to bici.longitud)
+            ResponseEntity.ok(ApiResponse(true, "Ubicación obtenida", ubicacion))
+        } catch (e: NoSuchElementException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse(false, e.message ?: "No encontrada"))
+        }
+    }
+
+    // --------------------------------------------------
+    //  GET /api/v1/bicicletas/ubicaciones
+    //  Obtener ubicaciones de todas las bicicletas
+    // --------------------------------------------------
+    @GetMapping("/ubicaciones")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    fun obtenerUbicaciones(): ResponseEntity<ApiResponse<Any>> {
+        val bicis = bicicletaService.listarTodas()
+        val ubicaciones = bicis.map {
+            mapOf(
+                "id" to it.id,
+                "codigo" to it.codigo,
+                "estado" to it.estado,
+                "latitud" to it.latitud,
+                "longitud" to it.longitud
+            )
+        }
+        return ResponseEntity.ok(ApiResponse(true, "Ubicaciones obtenidas", ubicaciones))
     }
 }

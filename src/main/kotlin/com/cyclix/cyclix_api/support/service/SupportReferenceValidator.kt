@@ -13,9 +13,9 @@ class SupportReferenceValidator(
     private val tableExistsCache = ConcurrentHashMap<String, Boolean>()
 
     fun validateReferences(bikeId: Long?, tripId: Long?, paymentId: Long?) {
-        bikeId?.let { validatePositiveAndExists("bikeId", "bikes", it) }
+        bikeId?.let { validatePositiveAndExists("bikeId", "bicicleta", it) }
         tripId?.let { validatePositiveAndExists("tripId", "trips", it) }
-        paymentId?.let { validatePositiveAndExists("paymentId", "payments", it) }
+        paymentId?.let { validatePositiveAndExists("paymentId", "wallet_transactions", it) }
     }
 
     private fun validatePositiveAndExists(fieldName: String, tableName: String, id: Long) {
