@@ -54,6 +54,10 @@ class AuthService(
         val user = userRepository.findByEmail(normalizedEmail)
             .orElseThrow { IllegalArgumentException("Credenciales inválidas") }
 
+        if (user.status.name.trim().uppercase() != "ACTIVE") {
+            throw IllegalArgumentException("La cuenta está inactiva")
+        }
+
         val rawPassword = request.password ?: throw IllegalArgumentException("La contraseña es obligatoria")
         if (!passwordEncoder.matches(rawPassword, user.passwordHash)) {
             throw IllegalArgumentException("Credenciales inválidas")
