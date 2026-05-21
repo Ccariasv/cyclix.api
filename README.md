@@ -177,6 +177,10 @@ Directorio: `src/main/resources/db/migration`
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
 
+Notas:
+- `register` crea usuarios con rol `USER` y estado `ACTIVE`.
+- `login` solo permite acceso a usuarios con estado `ACTIVE`.
+
 `login` responde:
 
 ```json
@@ -215,6 +219,9 @@ Payloads:
 Base mapping:
 - `/api/v1/get/user`
 - `/get/user`
+
+Acceso:
+- Solo `ADMIN`
 
 Endpoints:
 - `GET /api/v1/get/user`
@@ -380,6 +387,8 @@ Estados de bicicleta:
 ## Reglas de negocio clave
 
 - Registro crea usuario con rol `USER` y estado `ACTIVE`.
+- Login rechaza usuarios con estado distinto de `ACTIVE`.
+- Los endpoints de gestión de usuarios solo pueden ser usados por `ADMIN`.
 - Un usuario no puede tener más de un viaje `ACTIVE` al mismo tiempo.
 - Un viaje solo se puede finalizar si está `ACTIVE`.
 - Categoría `EMERGENCY` fuerza prioridad `CRITICAL`.
