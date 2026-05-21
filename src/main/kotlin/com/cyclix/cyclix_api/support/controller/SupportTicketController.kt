@@ -36,4 +36,8 @@ class SupportTicketController(
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     fun getMyTicketById(@PathVariable id: Long): SupportTicketResponse =
         supportTicketService.getMyTicketById(id)
+    @GetMapping("/health")
+    fun healthCheck(): String {
+        return "Support Tickets API OK"
+    }
 }
