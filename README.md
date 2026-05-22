@@ -305,6 +305,32 @@ Payloads:
 }
 ```
 
+### Wallet
+
+Usuario autenticado (`USER` o `ADMIN`):
+- `GET /api/v1/wallet/my`
+- `GET /api/v1/wallet/my/transactions`
+- `POST /api/v1/wallet/my/top-up`
+
+Admin (`ADMIN`):
+- `POST /api/v1/wallet/top-up`
+
+Payloads:
+- `POST /api/v1/wallet/my/top-up`
+```json
+{
+  "amount": 100.00,
+  "paymentMethod": "CARD"
+}
+```
+- `POST /api/v1/wallet/top-up`
+```json
+{
+  "userId": 15,
+  "amount": 100.00
+}
+```
+
 ### Puestos
 
 - `GET /api/v1/puestos`

@@ -94,7 +94,19 @@ Base: `/api/v1/wallet`
 
 - `GET /my` (`USER` o `ADMIN`)
 - `GET /my/transactions` (`USER` o `ADMIN`)
+- `POST /my/top-up` (`USER` o `ADMIN`) pago simulado para recarga propia
 - `POST /top-up` (`ADMIN`)
+
+### `WalletSelfTopUpRequest`
+
+```json
+{
+  "amount": 100.00,
+  "paymentMethod": "CARD"
+}
+```
+
+`paymentMethod`: `CARD | TRANSFER | CASH`
 
 ### `WalletTopUpRequest`
 
@@ -170,4 +182,5 @@ Ejemplo parcial:
   - minutos cobrados,
   - total final.
 - Antes de finalizar viaje, pueden consultar wallet (`GET /wallet/my`) para anticipar insuficiencia.
+- Para pruebas o entorno demo, el usuario autenticado puede recargar su propio wallet con `POST /wallet/my/top-up` sin intervención de admin.
 - Los valores monetarios vienen con 2 decimales (GTQ).

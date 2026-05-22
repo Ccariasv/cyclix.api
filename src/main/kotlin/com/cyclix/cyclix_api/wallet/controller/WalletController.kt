@@ -1,6 +1,7 @@
 package com.cyclix.cyclix_api.wallet.controller
 
 import com.cyclix.cyclix_api.wallet.dto.WalletBalanceResponse
+import com.cyclix.cyclix_api.wallet.dto.WalletSelfTopUpRequest
 import com.cyclix.cyclix_api.wallet.dto.WalletTopUpRequest
 import com.cyclix.cyclix_api.wallet.dto.WalletTransactionResponse
 import com.cyclix.cyclix_api.wallet.service.WalletService
@@ -24,6 +25,11 @@ class WalletController(
     @GetMapping("/my/transactions")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     fun getMyTransactions(): List<WalletTransactionResponse> = walletService.getMyTransactions()
+
+    @PostMapping("/my/top-up")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    fun simulateMyTopUp(@Valid @RequestBody request: WalletSelfTopUpRequest): WalletBalanceResponse =
+        walletService.simulateMyTopUp(request)
 
     @PostMapping("/top-up")
     @PreAuthorize("hasRole('ADMIN')")

@@ -15,6 +15,13 @@ data class WalletTopUpRequest(
     val amount: BigDecimal?
 )
 
+data class WalletSelfTopUpRequest(
+    @field:NotNull(message = "El monto es obligatorio")
+    @field:Positive(message = "El monto debe ser positivo")
+    val amount: BigDecimal?,
+    val paymentMethod: SimulatedPaymentMethod = SimulatedPaymentMethod.CARD
+)
+
 data class WalletBalanceResponse(
     val userId: Long,
     val balance: BigDecimal,
@@ -32,3 +39,9 @@ data class WalletTransactionResponse(
     val referenceId: Long?,
     val createdAt: LocalDateTime
 )
+
+enum class SimulatedPaymentMethod {
+    CARD,
+    TRANSFER,
+    CASH
+}
