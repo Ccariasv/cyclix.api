@@ -35,12 +35,14 @@ Variables principales:
 
 ### Local
 
-1. Levantar MariaDB local.
+1. Tener Docker y Docker Compose instalados.
 2. Ejecutar:
 
 ```bash
 ./gradlew bootRun
 ```
+
+Spring Boot levantara `docker-compose.yaml`, iniciara `mariadb` y tomara la conexion del servicio automaticamente durante desarrollo.
 
 API disponible en `http://localhost:6060`.
 
