@@ -2,6 +2,7 @@ package com.cyclix.cyclix_api.trip.service
 
 import com.cyclix.cyclix_api.trip.dto.CreateTripRequest
 import com.cyclix.cyclix_api.trip.dto.FinishTripRequest
+import com.cyclix.cyclix_api.trip.dto.TripHistoryResponse
 import com.cyclix.cyclix_api.trip.dto.TripResponse
 import com.cyclix.cyclix_api.trip.entity.Trip
 import com.cyclix.cyclix_api.trip.entity.TripStatus
@@ -84,11 +85,11 @@ class TripService(
     }
 
     @Transactional(readOnly = true)
-    fun getMyTrips(): List<TripResponse> {
+    fun getMyTrips(): List<TripHistoryResponse> {
         val currentUser = getCurrentUser()
 
         return tripRepository.findAllByUserIdOrderByStartedAtDesc(currentUser.id)
-            .map { it.toResponse() }
+            .map { it.toHistoryResponse() }
     }
 
     @Transactional(readOnly = true)
@@ -233,6 +234,17 @@ class TripService(
                 ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario autenticado no encontrado")
             }
     }
+
+    private fun Trip.toHistoryResponse(): TripHistoryResponse =
+        TripHistoryResponse(
+            id = id,
+            bikeId = bikeId,
+            startedAt = startedAt,
+            endedAt = endedAt,
+            status = status,
+            cost = totalAmount,
+            durationSeconds = durationSeconds
+        )
 
     private fun Trip.toResponse(): TripResponse =
         TripResponse(

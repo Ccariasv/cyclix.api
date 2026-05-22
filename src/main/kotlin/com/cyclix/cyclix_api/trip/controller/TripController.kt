@@ -2,6 +2,7 @@ package com.cyclix.cyclix_api.trip.controller
 
 import com.cyclix.cyclix_api.trip.dto.CreateTripRequest
 import com.cyclix.cyclix_api.trip.dto.FinishTripRequest
+import com.cyclix.cyclix_api.trip.dto.TripHistoryResponse
 import com.cyclix.cyclix_api.trip.dto.TripResponse
 import com.cyclix.cyclix_api.trip.service.TripService
 import jakarta.validation.Valid
@@ -31,7 +32,7 @@ class TripController(
 
     @GetMapping("/my")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    fun getMyTrips(): List<TripResponse> =
+    fun getMyTrips(): List<TripHistoryResponse> =
         tripService.getMyTrips()
 
     @GetMapping("/{id}")
