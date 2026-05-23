@@ -13,6 +13,7 @@ import com.cyclix.cyclix_api.wallet.service.WalletService
 import com.cyclix.cyclix_api.audit.service.AuditService
 import com.cyclix.cyclix_api.bicycle.model.EstadoBicicleta
 import com.cyclix.cyclix_api.bicycle.repository.BicicletaRepository
+import com.cyclix.cyclix_api.device.service.DeviceCommandPublisher
 import com.cyclix.cyclix_api.user.User
 import com.cyclix.cyclix_api.user.UserRepository
 import org.springframework.http.HttpStatus
@@ -31,7 +32,8 @@ class TripService(
     private val pricingService: PricingService,
     private val subscriptionService: SubscriptionService,
     private val walletService: WalletService,
-    private val auditService: AuditService
+    private val auditService: AuditService,
+    private val deviceCommandPublisher: DeviceCommandPublisher
 ) {
     @Transactional
     fun createTrip(request: CreateTripRequest): TripResponse {
@@ -81,7 +83,9 @@ class TripService(
             )
         )
 
-        return tripRepository.save(trip).toResponse()
+        val savedTrip = tripRepository.save(trip)
+        deviceCommandPublisher.publishUnlockCommand(savedTrip)
+        return savedTrip.toResponse()
     }
 
     @Transactional(readOnly = true)

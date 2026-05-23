@@ -30,6 +30,7 @@ Variables principales:
 - `SPRING_DATASOURCE_PASSWORD` (default compose: `cyclix10`)
 - `app.jwt.secret`
 - `app.jwt.expiration-seconds` (default `86400`)
+- `app.device.api-key` (llave compartida para dispositivos ESP32)
 
 ## Ejecutar proyecto
 
@@ -65,6 +66,7 @@ Servicios:
 
 - Público:
   - `/api/v1/auth/**`
+  - `/api/v1/device/**`
   - `/swagger-ui/**`
   - `/v3/api-docs/**`
 - Resto de endpoints: requiere `Authorization: Bearer <token>`.
@@ -215,6 +217,53 @@ Payloads:
 ```json
 { "email": "admin@cyclix.test", "password": "Test1234*" }
 ```
+
+### Flujo de desbloqueo con ESP32
+
+Flujo recomendado:
+
+1. La app escanea el `QR` o `NFC` de la bicicleta.
+2. La app identifica la bicicleta.
+   - Para QR ya existe `GET /api/v1/bicicletas/qr/{codigoQr}`.
+3. El ESP32 abre un WebSocket hacia la API:
+   - `ws://<host>:6060/ws/device?bikeId=<bikeId>&apiKey=<app.device.api-key>`
+   - también puede enviar la llave en el header `X-Device-Api-Key`
+4. La app autenticada inicia el viaje con `POST /api/v1/trips`.
+5. Si el viaje se crea, el backend deja:
+   - viaje en estado `ACTIVE`
+   - bicicleta en estado `EN_USO`
+6. Después del commit de la transacción, la API empuja por WebSocket un mensaje `UNLOCK` al socket registrado para esa bicicleta.
+7. Con ese mensaje, el ESP32 acciona el mecanismo físico.
+
+Mensaje inicial al conectar:
+
+```json
+{
+  "type": "CONNECTED",
+  "bikeId": 7,
+  "tripId": null,
+  "userId": null,
+  "message": "Dispositivo conectado",
+  "sentAt": "2026-05-22T10:30:45"
+}
+```
+
+Mensaje de desbloqueo:
+
+```json
+{
+  "type": "UNLOCK",
+  "bikeId": 7,
+  "tripId": 15,
+  "userId": 21,
+  "message": "Desbloqueo autorizado",
+  "sentAt": "2026-05-22T10:30:45"
+}
+```
+
+### Fallback HTTP para dispositivos
+
+También queda disponible `POST /api/v1/device/bikes/{bikeId}/unlock` como fallback por HTTP si un dispositivo no usa WebSocket.
 
 ### Usuarios
 

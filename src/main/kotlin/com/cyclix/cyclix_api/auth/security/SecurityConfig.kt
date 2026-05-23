@@ -24,6 +24,8 @@ class SecurityConfig(
             .authorizeHttpRequests { auth ->
                 auth
                     .requestMatchers("/api/v1/auth/**").permitAll()
+                    .requestMatchers("/api/v1/device/**").permitAll()
+                    .requestMatchers("/ws/device/**", "/ws/device").permitAll()
                     .requestMatchers(
                         "/swagger-ui/**",
                         "/swagger-ui.html",

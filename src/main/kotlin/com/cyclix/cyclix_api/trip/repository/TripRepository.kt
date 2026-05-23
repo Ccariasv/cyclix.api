@@ -10,6 +10,8 @@ interface TripRepository : JpaRepository<Trip, Long> {
 
     fun findByIdAndUserId(id: Long, userId: Long): Optional<Trip>
 
+    fun findByIdAndStatus(id: Long, status: TripStatus): Optional<Trip>
+
     fun findAllByOrderByStartedAtDesc(): List<Trip>
 
     fun existsByUserIdAndStatus(userId: Long, status: TripStatus): Boolean
