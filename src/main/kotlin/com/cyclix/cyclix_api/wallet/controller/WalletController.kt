@@ -27,7 +27,7 @@ class WalletController(
     fun getMyTransactions(): List<WalletTransactionResponse> = walletService.getMyTransactions()
 
     @PostMapping("/my/top-up")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     fun simulateMyTopUp(@Valid @RequestBody request: WalletSelfTopUpRequest): WalletBalanceResponse =
         walletService.simulateMyTopUp(request)
 

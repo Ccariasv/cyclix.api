@@ -169,6 +169,7 @@ class BicicletaController(
     //  Esta es la operación más usada en el día a día
     // --------------------------------------------------
     @PatchMapping("/{id}/estado")
+    @PreAuthorize("hasRole('ADMIN')")
     fun cambiarEstado(
         @PathVariable id: Long,
         @Valid @RequestBody request: CambiarEstadoRequest
