@@ -1,5 +1,6 @@
 package com.cyclix.cyclix_api.device.websocket
 
+import com.cyclix.cyclix_api.device.dto.DeviceClientType
 import com.cyclix.cyclix_api.device.service.DeviceWebSocketSessionRegistry
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
@@ -24,7 +25,6 @@ class DeviceWebSocketAuthInterceptor(
         val servletRequest = (request as? ServletServerHttpRequest)?.servletRequest
             ?: return reject(response, HttpStatus.BAD_REQUEST)
 
-        val bikeId = extractBikeId(servletRequest) ?: return reject(response, HttpStatus.BAD_REQUEST)
         val providedApiKey = servletRequest.getHeader("X-Device-Api-Key")
             ?: servletRequest.getParameter("apiKey")
 
@@ -32,8 +32,21 @@ class DeviceWebSocketAuthInterceptor(
             return reject(response, HttpStatus.UNAUTHORIZED)
         }
 
-        attributes[DeviceWebSocketSessionRegistry.BIKE_ID_ATTRIBUTE] = bikeId
-        return true
+        val clientType = extractClientType(servletRequest) ?: return reject(response, HttpStatus.BAD_REQUEST)
+        attributes[DeviceWebSocketSessionRegistry.CLIENT_TYPE_ATTRIBUTE] = clientType.name
+
+        return when (clientType) {
+            DeviceClientType.BIKE -> {
+                val bikeId = extractBikeId(servletRequest) ?: return reject(response, HttpStatus.BAD_REQUEST)
+                attributes[DeviceWebSocketSessionRegistry.BIKE_ID_ATTRIBUTE] = bikeId
+                true
+            }
+            DeviceClientType.STATION -> {
+                val stationId = extractStationId(servletRequest) ?: return reject(response, HttpStatus.BAD_REQUEST)
+                attributes[DeviceWebSocketSessionRegistry.STATION_ID_ATTRIBUTE] = stationId
+                true
+            }
+        }
     }
 
     override fun afterHandshake(
@@ -43,9 +56,23 @@ class DeviceWebSocketAuthInterceptor(
         exception: Exception?
     ) = Unit
 
+    private fun extractClientType(request: HttpServletRequest): DeviceClientType? {
+        val rawClientType = request.getParameter("clientType")?.trim()?.uppercase()
+        return if (rawClientType.isNullOrBlank()) {
+            DeviceClientType.BIKE
+        } else {
+            DeviceClientType.entries.firstOrNull { it.name == rawClientType }
+        }
+    }
+
     private fun extractBikeId(request: HttpServletRequest): Long? {
         val rawBikeId = request.getParameter("bikeId") ?: return null
         return rawBikeId.toLongOrNull()?.takeIf { it > 0 }
+    }
+
+    private fun extractStationId(request: HttpServletRequest): Long? {
+        val rawStationId = request.getParameter("stationId") ?: return null
+        return rawStationId.toLongOrNull()?.takeIf { it > 0 }
     }
 
     private fun reject(response: ServerHttpResponse, status: HttpStatus): Boolean {

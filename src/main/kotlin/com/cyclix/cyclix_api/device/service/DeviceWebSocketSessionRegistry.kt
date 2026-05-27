@@ -13,24 +13,78 @@ open class DeviceWebSocketSessionRegistry(
     private val objectMapper: ObjectMapper
 ) {
     private val log = LoggerFactory.getLogger(DeviceWebSocketSessionRegistry::class.java)
-    private val sessionsByBike = ConcurrentHashMap<Long, MutableSet<WebSocketSession>>()
+    private val bikeSessionsByBikeId = ConcurrentHashMap<Long, MutableSet<WebSocketSession>>()
+    private val stationSessionsByStationId = ConcurrentHashMap<Long, MutableSet<WebSocketSession>>()
 
-    open fun register(bikeId: Long, session: WebSocketSession) {
-        sessionsByBike.computeIfAbsent(bikeId) { ConcurrentHashMap.newKeySet() }.add(session)
+    open fun registerBike(bikeId: Long, session: WebSocketSession) {
+        bikeSessionsByBikeId.computeIfAbsent(bikeId) { ConcurrentHashMap.newKeySet() }.add(session)
+    }
+
+    open fun registerStation(stationId: Long, session: WebSocketSession) {
+        stationSessionsByStationId.computeIfAbsent(stationId) { ConcurrentHashMap.newKeySet() }.add(session)
     }
 
     open fun unregister(session: WebSocketSession) {
-        val bikeId = session.attributes[BIKE_ID_ATTRIBUTE] as? Long ?: return
-        sessionsByBike[bikeId]?.remove(session)
-        if (sessionsByBike[bikeId].isNullOrEmpty()) {
-            sessionsByBike.remove(bikeId)
+        when (session.attributes[CLIENT_TYPE_ATTRIBUTE]) {
+            CLIENT_TYPE_BIKE -> removeSession(
+                sessions = bikeSessionsByBikeId,
+                id = session.attributes[BIKE_ID_ATTRIBUTE] as? Long,
+                session = session
+            )
+            CLIENT_TYPE_STATION -> removeSession(
+                sessions = stationSessionsByStationId,
+                id = session.attributes[STATION_ID_ATTRIBUTE] as? Long,
+                session = session
+            )
         }
     }
 
     open fun sendToBike(bikeId: Long, payload: DeviceSocketMessage) {
-        val sessions = sessionsByBike[bikeId].orEmpty().toList()
+        send(
+            sessions = bikeSessionsByBikeId[bikeId].orEmpty().toList(),
+            payload = payload,
+            emptyLogMessage = "No hay dispositivos websocket conectados para la bicicleta {}",
+            targetId = bikeId,
+            errorLogMessage = "No se pudo enviar mensaje websocket a la bicicleta {}"
+        )
+    }
+
+    open fun sendToStation(stationId: Long, payload: DeviceSocketMessage) {
+        send(
+            sessions = stationSessionsByStationId[stationId].orEmpty().toList(),
+            payload = payload,
+            emptyLogMessage = "No hay estaciones websocket conectadas para el puesto {}",
+            targetId = stationId,
+            errorLogMessage = "No se pudo enviar mensaje websocket al puesto {}"
+        )
+    }
+
+    open fun hasStationSession(stationId: Long): Boolean =
+        stationSessionsByStationId[stationId].orEmpty().any { it.isOpen }
+
+    private fun removeSession(
+        sessions: ConcurrentHashMap<Long, MutableSet<WebSocketSession>>,
+        id: Long?,
+        session: WebSocketSession
+    ) {
+        if (id == null) {
+            return
+        }
+        sessions[id]?.remove(session)
+        if (sessions[id].isNullOrEmpty()) {
+            sessions.remove(id)
+        }
+    }
+
+    private fun send(
+        sessions: List<WebSocketSession>,
+        payload: DeviceSocketMessage,
+        emptyLogMessage: String,
+        targetId: Long,
+        errorLogMessage: String
+    ) {
         if (sessions.isEmpty()) {
-            log.info("No hay dispositivos websocket conectados para la bicicleta {}", bikeId)
+            log.info(emptyLogMessage, targetId)
             return
         }
 
@@ -44,13 +98,17 @@ open class DeviceWebSocketSessionRegistry(
                     unregister(session)
                 }
             } catch (ex: Exception) {
-                log.warn("No se pudo enviar comando websocket a la bicicleta {}", bikeId, ex)
+                log.warn(errorLogMessage, targetId, ex)
                 unregister(session)
             }
         }
     }
 
     companion object {
+        const val CLIENT_TYPE_ATTRIBUTE = "clientType"
+        const val CLIENT_TYPE_BIKE = "BIKE"
+        const val CLIENT_TYPE_STATION = "STATION"
         const val BIKE_ID_ATTRIBUTE = "bikeId"
+        const val STATION_ID_ATTRIBUTE = "stationId"
     }
 }

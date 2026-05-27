@@ -225,15 +225,20 @@ Flujo recomendado:
 1. La app escanea el `QR` o `NFC` de la bicicleta.
 2. La app identifica la bicicleta.
    - Para QR ya existe `GET /api/v1/bicicletas/qr/{codigoQr}`.
-3. El ESP32 abre un WebSocket hacia la API:
-   - `ws://<host>:6060/ws/device?bikeId=<bikeId>&apiKey=<app.device.api-key>`
+3. La bicicleta y la estación abren sus WebSocket hacia la API:
+   - bicicleta GPS:
+     `ws://<host>:6060/ws/device?clientType=BIKE&bikeId=<bikeId>&apiKey=<app.device.api-key>`
+   - estación de desbloqueo:
+     `ws://<host>:6060/ws/device?clientType=STATION&stationId=<stationId>&apiKey=<app.device.api-key>`
    - también puede enviar la llave en el header `X-Device-Api-Key`
 4. La app autenticada inicia el viaje con `POST /api/v1/trips`.
 5. Si el viaje se crea, el backend deja:
    - viaje en estado `ACTIVE`
    - bicicleta en estado `EN_USO`
-6. Después del commit de la transacción, la API empuja por WebSocket un mensaje `UNLOCK` al socket registrado para esa bicicleta.
-7. Con ese mensaje, el ESP32 acciona el mecanismo físico.
+6. Después del commit de la transacción, la API empuja por WebSocket un mensaje `UNLOCK` a la estación asociada a la bicicleta.
+7. Si no hay estación conectada, la API usa fallback al socket de la bicicleta.
+8. La bicicleta puede enviar su ubicación en tiempo real por el mismo socket con mensajes `LOCATION_UPDATE`.
+9. La auditoría de ruta no persiste cada mensaje: por defecto guarda puntos activos cada `15m` o `10s`, y fuera de viaje cada `30m` o `60s`.
 
 Mensaje inicial al conectar:
 
@@ -241,9 +246,12 @@ Mensaje inicial al conectar:
 {
   "type": "CONNECTED",
   "bikeId": 7,
+  "stationId": null,
   "tripId": null,
   "userId": null,
-  "message": "Dispositivo conectado",
+  "latitude": null,
+  "longitude": null,
+  "message": "Bicicleta conectada",
   "sentAt": "2026-05-22T10:30:45"
 }
 ```
@@ -254,10 +262,40 @@ Mensaje de desbloqueo:
 {
   "type": "UNLOCK",
   "bikeId": 7,
+  "stationId": 3,
   "tripId": 15,
   "userId": 21,
+  "latitude": null,
+  "longitude": null,
   "message": "Desbloqueo autorizado",
   "sentAt": "2026-05-22T10:30:45"
+}
+```
+
+Mensaje de ubicación desde bicicleta:
+
+```json
+{
+  "type": "LOCATION_UPDATE",
+  "latitude": 14.9722,
+  "longitude": -89.5305,
+  "recordedAt": "2026-05-27T12:15:30"
+}
+```
+
+Mensaje de confirmación cuando un punto fue auditado:
+
+```json
+{
+  "type": "LOCATION_AUDITED",
+  "bikeId": 7,
+  "stationId": 3,
+  "tripId": 15,
+  "latitude": 14.9722,
+  "longitude": -89.5305,
+  "recordedAt": "2026-05-27T12:15:30",
+  "message": "Ubicacion auditada",
+  "sentAt": "2026-05-27T12:15:31"
 }
 ```
 

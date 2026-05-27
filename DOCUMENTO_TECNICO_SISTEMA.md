@@ -97,8 +97,10 @@ Archivos: `maintenance/*`.
 ### 4.11 Dispositivos (ESP32)
 Archivos: `device/*`, `config/DeviceWebSocketConfig.kt`.
 - HTTP fallback para unlock.
-- Canal WebSocket autenticado por API key y bikeId.
-- Publicación de comando `UNLOCK` después del commit de creación de viaje.
+- Canal WebSocket autenticado por API key, con clientes `BIKE` y `STATION`.
+- La bicicleta reporta ubicación en tiempo real por WebSocket y solo los puntos aceptados por la política de auditoría actualizan `bicicleta.latitud/longitud`.
+- La auditoría de ruta se guarda en `bicycle_location_history` con muestreo por distancia/tiempo para evitar escribir cada mensaje.
+- Publicación de comando `UNLOCK` después del commit de creación de viaje hacia la estación asociada, con fallback a la bicicleta si no hay estación conectada.
 
 ### 4.12 Auditoría y analítica
 - Auditoría (`audit/*`): log de eventos de negocio y endpoint admin de consulta.
@@ -115,6 +117,7 @@ Migraciones en `src/main/resources/db/migration`:
 - V8: latitud/longitud en bicicletas
 - V9: mantenimiento + rol MAINTENANCE
 - V10: seed de puestos/bicicletas
+- V13: historial auditable de ubicaciones de bicicleta
 
 ## 6. Reglas críticas del sistema
 - No puede existir más de un viaje ACTIVE por usuario.
