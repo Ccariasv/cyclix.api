@@ -62,3 +62,22 @@ data class ZoneResponse(
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 )
+
+data class ZoneValidationRequest(
+    @field:NotNull(message = "La latitud es obligatoria")
+    @field:DecimalMin(value = "-90.0", message = "La latitud debe ser mayor o igual a -90")
+    @field:DecimalMax(value = "90.0", message = "La latitud debe ser menor o igual a 90")
+    val latitude: BigDecimal,
+    @field:NotNull(message = "La longitud es obligatoria")
+    @field:DecimalMin(value = "-180.0", message = "La longitud debe ser mayor o igual a -180")
+    @field:DecimalMax(value = "180.0", message = "La longitud debe ser menor o igual a 180")
+    val longitude: BigDecimal
+)
+
+data class ZoneValidationResponse(
+    val allowed: Boolean,
+    val zoneId: Long?,
+    val zoneName: String?,
+    val distanceMeters: Double?,
+    val message: String
+)
