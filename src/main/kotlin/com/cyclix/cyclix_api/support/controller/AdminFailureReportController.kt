@@ -40,6 +40,10 @@ class AdminFailureReportController(
     ): SupportTicketResponse =
         supportTicketService.updateFailureReportStatusForAdmin(id, request.status)
 
+    @PutMapping("/{id}/resolve")
+    fun resolveFailureReport(@PathVariable id: Long): SupportTicketResponse =
+        supportTicketService.resolveFailureReportForAdmin(id)
+
     @PostMapping("/{id}/maintenance")
     @ResponseStatus(HttpStatus.CREATED)
     fun createMaintenanceFromFailureReport(

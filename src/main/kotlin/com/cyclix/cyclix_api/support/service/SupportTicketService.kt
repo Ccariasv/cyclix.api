@@ -147,6 +147,13 @@ class SupportTicketService(
     }
 
     @Transactional
+    fun resolveFailureReportForAdmin(reportId: Long): SupportTicketResponse {
+        val report = findFailureReportOrThrow(reportId)
+        report.status = TicketStatus.RESOLVED
+        return report.toResponse()
+    }
+
+    @Transactional
     fun updateStatusForAdmin(ticketId: Long, rawStatus: String): SupportTicketResponse {
         val ticket = findTicketOrThrow(ticketId)
         val newStatus = parseEnum<TicketStatus>(rawStatus, "status")
