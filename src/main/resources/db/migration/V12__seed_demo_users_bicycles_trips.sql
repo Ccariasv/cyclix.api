@@ -1,5 +1,5 @@
--- V11__seed_demo_users_bicycles_trips.sql
--- Datos demo para probar usuarios, bicicletas, wallets y viajes
+-- V12__seed_demo_users_bicycles_trips.sql
+-- Datos demo orientados a Zacapa, Zacapa, Guatemala
 
 INSERT IGNORE INTO roles (name, description) VALUES
     ('USER', 'Usuario final de la plataforma'),
@@ -69,15 +69,99 @@ VALUES
 );
 
 INSERT IGNORE INTO puesto (id, nombre, codigo, direccion, latitud, longitud, capacidad_total, capacidad_disponible, estado) VALUES
-(1, 'Puesto Parque Central Zacapa', 'PST-ZAC-001', 'Parque Central de Zacapa, Barrio El Centro', 14.9722, -89.5305, 10, 8, 'ACTIVO'),
-(2, 'Puesto CC Pradera Zacapa', 'PST-ZAC-002', 'Centro Comercial Pradera, Calzada Alvaro Arzú', 14.9654, -89.5398, 10, 9, 'ACTIVO');
+(1, 'Puesto Parque Central Zacapa', 'PST-ZAC-001', 'Parque Central, Barrio El Centro, Zacapa, Zacapa, Guatemala', 14.9722, -89.5305, 10, 8, 'ACTIVO'),
+(2, 'Puesto CC Pradera Zacapa', 'PST-ZAC-002', 'Centro Comercial Pradera, Calzada Álvaro Arzú, Zacapa, Zacapa, Guatemala', 14.9654, -89.5398, 10, 9, 'ACTIVO'),
+(3, 'Universidad Mariano Gálvez Zacapa', 'PST-ZAC-003', '4ta. Calle 2-31, Zona 2, Zacapa, Zacapa, Guatemala', 14.9705, -89.5280, 10, 10, 'ACTIVO'),
+(4, 'Estadio Municipal de Zacapa', 'PST-ZAC-004', 'Estadio Municipal David Ordóñez Bardales, Zacapa, Zacapa, Guatemala', 14.9669, -89.5269, 10, 10, 'ACTIVO');
+
+UPDATE puesto
+SET
+    nombre = 'Puesto Parque Central Zacapa',
+    direccion = 'Parque Central, Barrio El Centro, Zacapa, Zacapa, Guatemala',
+    latitud = 14.9722,
+    longitud = -89.5305,
+    updated_at = CURRENT_TIMESTAMP
+WHERE codigo = 'PST-ZAC-001';
+
+UPDATE puesto
+SET
+    nombre = 'Puesto CC Pradera Zacapa',
+    direccion = 'Centro Comercial Pradera, Calzada Álvaro Arzú, Zacapa, Zacapa, Guatemala',
+    latitud = 14.9654,
+    longitud = -89.5398,
+    updated_at = CURRENT_TIMESTAMP
+WHERE codigo = 'PST-ZAC-002';
+
+UPDATE puesto
+SET
+    nombre = 'Universidad Mariano Gálvez Zacapa',
+    direccion = '4ta. Calle 2-31, Zona 2, Zacapa, Zacapa, Guatemala',
+    latitud = 14.9705,
+    longitud = -89.5280,
+    updated_at = CURRENT_TIMESTAMP
+WHERE codigo = 'PST-ZAC-003';
+
+UPDATE puesto
+SET
+    nombre = 'Estadio Municipal de Zacapa',
+    direccion = 'Estadio Municipal David Ordóñez Bardales, Zacapa, Zacapa, Guatemala',
+    latitud = 14.9669,
+    longitud = -89.5269,
+    updated_at = CURRENT_TIMESTAMP
+WHERE codigo = 'PST-ZAC-004';
 
 INSERT IGNORE INTO bicicleta (id, codigo, marca, modelo, color, tipo, tamano_llanta, precio_por_hora, estado, codigo_qr, puesto_id, latitud, longitud) VALUES
 (1, 'BIC-ZAC-001', 'Giant', 'Escape 3', 'Negro', 'URBANA', 28.0, 15.00, 'DISPONIBLE', 'CYCLIX-BICI-BIC-ZAC-001', 1, NULL, NULL),
 (2, 'BIC-ZAC-002', 'Trek', 'Marlin 5', 'Azul', 'MONTAÑA', 29.0, 20.00, 'DISPONIBLE', 'CYCLIX-BICI-BIC-ZAC-002', 1, NULL, NULL),
 (3, 'BIC-ZAC-003', 'Specialized', 'Turbo Vado', 'Rojo', 'ELECTRICA', 27.5, 30.00, 'DISPONIBLE', 'CYCLIX-BICI-BIC-ZAC-003', 2, NULL, NULL),
-(4, 'BIC-DEMO-004', 'Scott', 'Sub Cross 30', 'Verde', 'URBANA', 28.0, 15.00, 'DISPONIBLE', 'CYCLIX-BICI-BIC-DEMO-004', 1, 14.9720, -89.5300),
-(5, 'BIC-DEMO-005', 'Cannondale', 'Trail 8', 'Gris', 'MONTAÑA', 29.0, 20.00, 'DISPONIBLE', 'CYCLIX-BICI-BIC-DEMO-005', 2, 14.9650, -89.5390);
+(4, 'BIC-ZAC-004', 'Scott', 'Sub Cross 30', 'Verde', 'URBANA', 28.0, 15.00, 'DISPONIBLE', 'CYCLIX-BICI-BIC-ZAC-004', 1, 14.9720, -89.5300),
+(5, 'BIC-ZAC-005', 'Cannondale', 'Trail 8', 'Gris', 'MONTAÑA', 29.0, 20.00, 'DISPONIBLE', 'CYCLIX-BICI-BIC-ZAC-005', 2, 14.9650, -89.5390),
+(6, 'BIC-ZAC-006', 'Merida', 'Crossway 100', 'Blanco', 'URBANA', 28.0, 15.00, 'DISPONIBLE', 'CYCLIX-BICI-BIC-ZAC-006', 3, 14.9705, -89.5280),
+(7, 'BIC-ZAC-007', 'GT', 'Aggressor Expert', 'Amarillo', 'MONTAÑA', 29.0, 20.00, 'DISPONIBLE', 'CYCLIX-BICI-BIC-ZAC-007', 4, 14.9669, -89.5269);
+
+UPDATE bicicleta
+SET
+    codigo = 'BIC-ZAC-004',
+    codigo_qr = 'CYCLIX-BICI-BIC-ZAC-004',
+    puesto_id = 1,
+    latitud = 14.9720,
+    longitud = -89.5300,
+    updated_at = CURRENT_TIMESTAMP
+WHERE codigo IN ('BIC-DEMO-004', 'BIC-ZAC-004')
+  AND id = 4;
+
+UPDATE bicicleta
+SET
+    codigo = 'BIC-ZAC-005',
+    codigo_qr = 'CYCLIX-BICI-BIC-ZAC-005',
+    puesto_id = 2,
+    latitud = 14.9650,
+    longitud = -89.5390,
+    updated_at = CURRENT_TIMESTAMP
+WHERE codigo IN ('BIC-DEMO-005', 'BIC-ZAC-005')
+  AND id = 5;
+
+UPDATE bicicleta
+SET
+    codigo = 'BIC-ZAC-006',
+    codigo_qr = 'CYCLIX-BICI-BIC-ZAC-006',
+    puesto_id = 3,
+    latitud = 14.9705,
+    longitud = -89.5280,
+    updated_at = CURRENT_TIMESTAMP
+WHERE codigo = 'BIC-ZAC-006'
+  AND id = 6;
+
+UPDATE bicicleta
+SET
+    codigo = 'BIC-ZAC-007',
+    codigo_qr = 'CYCLIX-BICI-BIC-ZAC-007',
+    puesto_id = 4,
+    latitud = 14.9669,
+    longitud = -89.5269,
+    updated_at = CURRENT_TIMESTAMP
+WHERE codigo = 'BIC-ZAC-007'
+  AND id = 7;
 
 INSERT INTO wallets (user_id, balance, currency)
 SELECT u.id, 500.00, 'GTQ'
@@ -248,12 +332,64 @@ VALUES
     NULL,
     NULL,
     NULL
+),
+(
+    1006,
+    (SELECT id FROM user WHERE email = 'laura@cyclix.test'),
+    6,
+    'COMPLETED',
+    14.9705000,
+    -89.5280000,
+    14.9718000,
+    -89.5268000,
+    '2026-05-20 11:00:00',
+    '2026-05-20 11:40:00',
+    2.10,
+    2400,
+    1,
+    'Tarifa estándar',
+    FALSE,
+    NULL,
+    40,
+    20.00,
+    120,
+    5.00,
+    30,
+    0.00,
+    20.00,
+    20.00
+),
+(
+    1007,
+    (SELECT id FROM user WHERE email = 'admin@cyclix.test'),
+    7,
+    'COMPLETED',
+    14.9669000,
+    -89.5269000,
+    14.9682000,
+    -89.5254000,
+    '2026-05-21 17:30:00',
+    '2026-05-21 18:05:00',
+    1.90,
+    2100,
+    1,
+    'Tarifa estándar',
+    FALSE,
+    NULL,
+    35,
+    20.00,
+    120,
+    5.00,
+    30,
+    0.00,
+    20.00,
+    20.00
 );
 
 UPDATE bicicleta
 SET estado = 'EN_USO',
     updated_at = CURRENT_TIMESTAMP
-WHERE codigo = 'BIC-DEMO-005'
+WHERE codigo = 'BIC-ZAC-005'
   AND EXISTS (
       SELECT 1
       FROM trips
