@@ -462,7 +462,7 @@ Estados de puesto:
 - `GET /api/v1/bicicletas/qr/{codigoQr}`
 - `POST /api/v1/bicicletas` (`ADMIN`)
 - `PUT /api/v1/bicicletas/{id}` (`ADMIN`)
-- `PATCH /api/v1/bicicletas/{id}/estado`
+- `PATCH /api/v1/bicicletas/{id}/estado` (`ADMIN`)
 - `DELETE /api/v1/bicicletas/{id}` (`ADMIN`, baja logica)
 
 Payloads:
@@ -479,7 +479,7 @@ Payloads:
   "puestoId": 1
 }
 ```
-- `PATCH /api/v1/bicicletas/{id}/estado`
+- `PATCH /api/v1/bicicletas/{id}/estado` (`ADMIN`)
 ```json
 {
   "nuevoEstado": "MANTENIMIENTO",

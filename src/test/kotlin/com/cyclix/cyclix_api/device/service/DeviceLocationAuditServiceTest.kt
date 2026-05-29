@@ -133,7 +133,6 @@ class DeviceLocationAuditServiceTest {
         color = "Negro",
         tipo = TipoBicicleta.URBANA,
         tamanoLlanta = 29.0,
-        precioPorHora = BigDecimal("10.00"),
         estado = EstadoBicicleta.EN_USO,
         codigoQr = "CYCLIX-BICI-BIC-$id",
         puesto = Puesto(

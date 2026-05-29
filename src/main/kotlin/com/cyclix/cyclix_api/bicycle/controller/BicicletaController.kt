@@ -166,9 +166,10 @@ class BicicletaController(
     // --------------------------------------------------
     //  PATCH /api/v1/bicicletas/{id}/estado
     //  Cambiar estado de una bici (rentar, devolver, mantenimiento)
-    //  Esta es la operación más usada en el día a día
+    //  Requiere: JWT + Rol ADMIN
     // --------------------------------------------------
     @PatchMapping("/{id}/estado")
+    @PreAuthorize("hasRole('ADMIN')")
     fun cambiarEstado(
         @PathVariable id: Long,
         @Valid @RequestBody request: CambiarEstadoRequest

@@ -3,7 +3,6 @@ package com.cyclix.cyclix_api.bicycle.dto
 import com.cyclix.cyclix_api.bicycle.model.EstadoBicicleta
 import com.cyclix.cyclix_api.bicycle.model.TipoBicicleta
 import jakarta.validation.constraints.*
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 /**
@@ -35,10 +34,6 @@ data class BicicletaRequest(
     @field:DecimalMin(value = "10.0", message = "Tamaño de llanta inválido")
     @field:DecimalMax(value = "36.0", message = "Tamaño de llanta inválido")
     val tamanoLlanta: Double,
-
-    @field:NotNull(message = "El precio por hora es obligatorio")
-    @field:DecimalMin(value = "0.01", message = "El precio debe ser mayor a 0")
-    val precioPorHora: BigDecimal,
 
     /** ID del puesto donde se registra — puede ser null */
     val puestoId: Long? = null
@@ -73,7 +68,6 @@ data class BicicletaResponse(
     val color: String,
     val tipo: TipoBicicleta,
     val tamanoLlanta: Double,
-    val precioPorHora: BigDecimal,
     val estado: EstadoBicicleta,
     val codigoQr: String?,
     val latitud: Double?,
@@ -96,7 +90,6 @@ data class BicicletaResumenResponse(
     val color: String,
     val tipo: TipoBicicleta,
     val tamanoLlanta: Double,
-    val precioPorHora: BigDecimal,
     val estado: EstadoBicicleta,
     val latitud: Double?,
     val longitud: Double?,

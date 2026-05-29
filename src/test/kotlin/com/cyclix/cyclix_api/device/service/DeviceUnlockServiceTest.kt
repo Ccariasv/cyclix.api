@@ -95,7 +95,6 @@ class DeviceUnlockServiceTest {
         color = "Negro",
         tipo = TipoBicicleta.URBANA,
         tamanoLlanta = 29.0,
-        precioPorHora = BigDecimal("10.00"),
         estado = estado,
         codigoQr = "CYCLIX-BICI-BIC-$id"
     )

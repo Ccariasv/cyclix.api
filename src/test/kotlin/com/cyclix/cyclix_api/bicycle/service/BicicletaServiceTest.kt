@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import java.math.BigDecimal
 import java.util.Optional
 
 class BicicletaServiceTest {
@@ -83,7 +82,6 @@ class BicicletaServiceTest {
         color = "Negro",
         tipo = TipoBicicleta.URBANA,
         tamanoLlanta = 29.0,
-        precioPorHora = BigDecimal("10.00"),
         estado = EstadoBicicleta.DISPONIBLE,
         codigoQr = "CYCLIX-BICI-$codigo"
     )

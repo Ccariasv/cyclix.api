@@ -50,7 +50,6 @@ class DeviceCommandPublisherTest {
                     color = "Negro",
                     tipo = TipoBicicleta.URBANA,
                     tamanoLlanta = 29.0,
-                    precioPorHora = BigDecimal("10.00"),
                     estado = EstadoBicicleta.DISPONIBLE,
                     codigoQr = "CYCLIX-BICI-BIC-7",
                     puesto = Puesto(

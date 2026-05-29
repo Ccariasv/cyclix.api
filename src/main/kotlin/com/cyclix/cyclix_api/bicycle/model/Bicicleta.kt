@@ -2,7 +2,6 @@ package com.cyclix.cyclix_api.bicycle.model
 
 import com.cyclix.cyclix_api.puesto.model.Puesto
 import jakarta.persistence.*
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
 /**
@@ -41,10 +40,6 @@ data class Bicicleta(
     /** Tamaño de llanta en pulgadas, ej: 26.0, 27.5, 29.0 */
     @Column(name = "tamano_llanta", nullable = false)
     val tamanoLlanta: Double,
-
-    /** Precio de renta por hora */
-    @Column(name = "precio_por_hora", nullable = false)
-    val precioPorHora: BigDecimal,
 
     /** Estado actual de la bicicleta */
     @Enumerated(EnumType.STRING)

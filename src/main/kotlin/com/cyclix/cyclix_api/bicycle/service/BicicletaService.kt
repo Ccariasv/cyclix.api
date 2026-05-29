@@ -117,7 +117,6 @@ class BicicletaService(
             color        = request.color,
             tipo         = request.tipo,
             tamanoLlanta = request.tamanoLlanta,
-            precioPorHora = request.precioPorHora,
             estado       = EstadoBicicleta.DISPONIBLE,
             codigoQr     = codigoQr,
             puesto       = puesto
@@ -162,7 +161,6 @@ class BicicletaService(
             color         = request.color,
             tipo          = request.tipo,
             tamanoLlanta  = request.tamanoLlanta,
-            precioPorHora = request.precioPorHora,
             puesto        = nuevoPuesto,
             updatedAt     = LocalDateTime.now()
         )
@@ -279,7 +277,6 @@ class BicicletaService(
             color         = color,
             tipo          = tipo,
             tamanoLlanta  = tamanoLlanta,
-            precioPorHora = precioPorHora,
             estado        = estado,
             codigoQr      = codigoQr,
             latitud       = coords.first,
@@ -304,7 +301,6 @@ class BicicletaService(
             color         = color,
             tipo          = tipo,
             tamanoLlanta  = tamanoLlanta,
-            precioPorHora = precioPorHora,
             estado        = estado,
             latitud       = coords.first,
             longitud      = coords.second,
