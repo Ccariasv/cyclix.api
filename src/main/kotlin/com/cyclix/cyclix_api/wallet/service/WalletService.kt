@@ -85,34 +85,89 @@ class WalletService(
             ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado: $userId")
         }
         val wallet = getOrCreateWallet(user)
+        return debitWallet(
+            wallet = wallet,
+            amount = normalizedAmount,
+            user = user,
+            transactionType = WalletTransactionType.TRIP_CHARGE,
+            description = "Cobro de viaje",
+            referenceType = "trip",
+            referenceId = tripId,
+            insufficientFundsMessage = "Saldo insuficiente en wallet para finalizar viaje",
+            auditEventType = "WALLET_TRIP_CHARGED",
+            auditDetails = "Cobro de viaje $tripId por $normalizedAmount",
+            auditRejectedEventType = "WALLET_CHARGE_REJECTED",
+            auditRejectedDetails = "Cobro de viaje $tripId rechazado por fondos insuficientes"
+        )
+    }
+
+    @Transactional
+    fun debitForSubscriptionPurchase(userId: Long, subscriptionId: Long, amount: BigDecimal): BigDecimal {
+        val normalizedAmount = amount.setScale(2, RoundingMode.HALF_UP)
+        if (normalizedAmount <= BigDecimal.ZERO) return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP)
+
+        val user = userRepository.findById(userId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado: $userId")
+        }
+        val wallet = getOrCreateWallet(user)
+        return debitWallet(
+            wallet = wallet,
+            amount = normalizedAmount,
+            user = user,
+            transactionType = WalletTransactionType.SUBSCRIPTION_PURCHASE,
+            description = "Compra de suscripción",
+            referenceType = "user_subscription",
+            referenceId = subscriptionId,
+            insufficientFundsMessage = "Saldo insuficiente en wallet para comprar la suscripción",
+            auditEventType = "WALLET_SUBSCRIPTION_PURCHASED",
+            auditDetails = "Compra de suscripción $subscriptionId por $normalizedAmount",
+            auditRejectedEventType = "WALLET_SUBSCRIPTION_REJECTED",
+            auditRejectedDetails = "Compra de suscripción $subscriptionId rechazada por fondos insuficientes"
+        )
+    }
+
+    private fun debitWallet(
+        wallet: Wallet,
+        amount: BigDecimal,
+        user: User,
+        transactionType: WalletTransactionType,
+        description: String,
+        referenceType: String,
+        referenceId: Long,
+        insufficientFundsMessage: String,
+        auditEventType: String,
+        auditDetails: String,
+        auditRejectedEventType: String,
+        auditRejectedDetails: String
+    ): BigDecimal {
         val before = wallet.balance
-        if (before < normalizedAmount) {
+        if (before < amount) {
             auditService.log(
-                "WALLET_CHARGE_REJECTED",
+                auditRejectedEventType,
                 "wallet",
                 wallet.id,
-                "Cobro de viaje $tripId rechazado por fondos insuficientes",
+                auditRejectedDetails,
                 user
             )
-            throw ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "Saldo insuficiente en wallet para finalizar viaje")
+            throw ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, insufficientFundsMessage)
         }
-        val after = before.subtract(normalizedAmount).setScale(2, RoundingMode.HALF_UP)
+        val after = before.subtract(amount).setScale(2, RoundingMode.HALF_UP)
         wallet.balance = after
         walletRepository.save(wallet)
         walletTransactionRepository.save(
             WalletTransaction(
                 wallet = wallet,
-                type = WalletTransactionType.TRIP_CHARGE,
-                amount = normalizedAmount,
+                type = transactionType,
+                amount = amount,
                 balanceBefore = before,
                 balanceAfter = after,
-                description = "Cobro de viaje",
-                referenceType = "trip",
-                referenceId = tripId
+                description = description,
+                referenceType = referenceType,
+                referenceId = referenceId
             )
         )
-        auditService.log("WALLET_TRIP_CHARGED", "wallet", wallet.id, "Cobro de viaje $tripId por $normalizedAmount", user)
-        return normalizedAmount
+        auditService.log(auditEventType, "wallet", wallet.id, auditDetails, user)
+        return amount
     }
 
     private fun getOrCreateWallet(user: User): Wallet {

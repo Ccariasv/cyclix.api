@@ -32,6 +32,7 @@ class SecurityConfig(
                         "/v3/api-docs/**"
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/bicicletas", "/api/v1/bicicletas/filtrar").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/subscriptions/plans").permitAll()
                     .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

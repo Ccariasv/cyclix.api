@@ -54,6 +54,7 @@ class WalletTransaction(
 enum class WalletTransactionType {
     TOP_UP,
     TRIP_CHARGE,
+    SUBSCRIPTION_PURCHASE,
     REFUND,
     ADJUSTMENT
 }

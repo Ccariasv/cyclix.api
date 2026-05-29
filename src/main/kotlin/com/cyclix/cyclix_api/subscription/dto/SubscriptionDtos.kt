@@ -55,5 +55,19 @@ data class UserSubscriptionResponse(
     val includedMinutes: Int,
     val consumedMinutes: Int,
     val remainingMinutes: Int,
+    val autoRenew: Boolean,
+    val monthlyPrice: BigDecimal
+)
+
+data class SubscriptionPurchaseRequest(
+    @field:NotNull(message = "El id del plan es obligatorio")
+    @field:Positive(message = "El id del plan debe ser positivo")
+    val planId: Long?,
+    @field:NotNull(message = "Debe indicar auto renovación")
+    val autoRenew: Boolean
+)
+
+data class SubscriptionAutoRenewRequest(
+    @field:NotNull(message = "Debe indicar auto renovación")
     val autoRenew: Boolean
 )
